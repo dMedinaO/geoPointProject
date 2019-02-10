@@ -1,0 +1,173 @@
+{
+  "ID_encuesta": "123456789",
+  "Nombre": "Nombre de la encuesta",
+  "Descripcion": "Descripcion y motivo de la encuesta",
+  "cantidadPreguntas": 10,
+  "preguntas":[
+    {
+      "idPregunta" : "1",
+      "preguntaTipo": "textoPlano",
+      "nombrePregunta": "Esta es la pregunta numero 1",
+      "descripcionPregunta": "Esta es una pregunta de texto plano",
+      "imagen" : "NO"
+    },
+
+    {
+      "idPregunta" : "2",
+      "preguntaTipo": "textoPlano",
+      "nombrePregunta" : "Esta es la pregunta numero 2",
+      "descripcionPregunta": "Esta es una pregunta de texto plano con imagen",
+      "imagen" : "path_to_imagen/imagen.png"
+    },
+
+    {
+      "idPregunta" : "3",
+      "preguntaTipo": "alternativa",
+      "nombrePregunta": "Esta es la pregunta numero 3",
+      "descripcionPregunta" : "Esta es la descripcion de la pregunta sólo puede seleccionar una alternativa",
+      "imagen" : "NO",
+      "alternativas":[
+        {
+          "valor": "alternativa1",
+          "idAlternativa": "1"
+        },
+        {
+          "valor": "alternativa2",
+          "idAlternativa": "2"
+        },
+        {
+          "valor": "alternativa3",
+          "idAlternativa": "3"
+        }
+      ]
+    },
+
+    {
+      "idPregunta" : "4",
+      "preguntaTipo": "seleccionMultiple",
+      "nombrePregunta" : "Esta es la pregunta numero 4",
+      "descripcionPregunta" : "Esta es la descripcion de la pregunta puede seleccionar varias cosas",
+      "imagen" : "path_to_imagen/nombreImagen.png",
+      "alternativas":[
+        {
+          "valor": "alternativa1",
+          "idAlternativa": "1"
+        },
+        {
+          "valor": "alternativa2",
+          "idAlternativa": "2"
+        },
+        {
+          "valor": "alternativa3",
+          "idAlternativa": "3"
+        }
+      ]
+    },
+
+    {
+      "idPregunta" : "5",
+      "preguntaTipo": "poligono",
+      "nombrePregunta": "Esta es la pregunta numero 5",
+      "descripcionPregunta" : "Esta es la descripcion de la Pregunta",
+      "imagen" : "NO"
+    },
+
+    {
+      "idPregunta" : "6",
+      "preguntaTipo": "ruta",
+      "nombrePregunta": "Esta es la pregunta numero 6",
+      "descripcionPregunta" : "Esta es la descripcion de la Pregunta",
+      "imagen" : "NO"
+    }
+
+    {
+      "idPregunta" : "7",
+      "preguntaTipo": "puntos",
+      "nombrePregunta": "Esta es la pregunta numero 7",
+      "descripcionPregunta" : "Esta es la descripcion de la Pregunta",
+      "imagen" : "NO"
+    },
+
+    {
+      "idPregunta" : "8",
+      "preguntaTipo": "puntosConPregunta",
+      "nombrePregunta": "Esta es la pregunta numero 8",
+      "descripcionPregunta" : "Esta es la descripcion de la Pregunta",
+      "imagen" : "NO",
+      "pregunta":{
+        "tipoPregunta" : "textoPlano",
+        "nombrePregunta" : "Esta es una pregunta en un mapa",
+        "descripcionPregunta": "Esta es la descripcion de la pregunta"
+      }
+    },
+
+    {
+      "idPregunta" : "9",
+      "preguntaTipo": "puntosConPregunta",
+      "nombrePregunta": "Esta es la pregunta numero 8",
+      "descripcionPregunta" : "Esta es la descripcion de la Pregunta",
+      "imagen" : "NO",
+      "pregunta":{
+        "tipoPregunta" : "alternativa",
+        "nombrePregunta" : "Esta es una pregunta en un mapa",
+        "descripcionPregunta": "Esta es la descripcion de la pregunta",
+        "alternativas":[
+          {
+            "valor": "alternativa1",
+            "idAlternativa": "1"
+          },
+          {
+            "valor": "alternativa2",
+            "idAlternativa": "2"
+          },
+          {
+            "valor": "alternativa3",
+            "idAlternativa": "3"
+          }
+        ]
+      }
+    },
+
+    {
+      "idPregunta" : "10",
+      "preguntaTipo" : "rangos",
+      "valorRango" : "0-10",
+      "nombrePregunta": "Nombre de la pregunta",
+      "descripcionPregunta": "Esta es una pregunta del tipo conformidad en escalas",
+      "imagen": "NO",
+      "items":[
+        {
+          "headerItem": "Descripcion item 1",
+          "details":[
+            {
+              "detalle": "Item numero 1"
+            },
+            {
+              "detalle": "Item numero 2"
+            },
+
+            {
+              "detalle": "Item numero 3"
+            }
+          ],
+        },
+
+        {
+          "headerItem": "Descripcion item 2",
+          "details":[
+            {
+              "detalle": "Item numero 1"
+            },
+            {
+              "detalle": "Item numero 2"
+            },
+
+            {
+              "detalle": "Item numero 3"
+            }
+          ],
+        }
+      ]
+    }
+  ]
+}
