@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableRow xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginBottom="20dp"
+    android:layout_marginTop="20dp"
+    android:layout_weight="1"
+    android:clickable="true"
+    android:onClick="handleRowClick"
+    android:orientation="vertical"
+    android:paddingBottom="20dp"
+    android:weightSum="12">
+
+    <TextView
+        android:id="@+id/questionnumber"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:text=""
+        android:textSize="11sp" />
+
+
+    <TextView
+        android:id="@+id/questiontitle"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="9"
+        android:ellipsize="end"
+        android:text="Titulo"
+        android:textSize="11sp" />
+
+    <!--<TextView
+        android:id="@+id/state"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="2"
+        android:text="Estado"
+        android:textSize="11sp" />-->
+
+    <ImageView
+        android:id="@+id/state"
+        android:layout_width="0dp"
+        android:layout_weight="2"
+        android:layout_height="match_parent"
+        app:srcCompat="@android:drawable/checkbox_on_background" />
+</TableRow>
