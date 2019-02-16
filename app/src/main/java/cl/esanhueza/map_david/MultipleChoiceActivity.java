@@ -19,6 +19,7 @@ import org.osmdroid.util.GeoPoint;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MultipleChoiceActivity extends QuestionActivity{
     int maxSelected = 1;
@@ -43,8 +44,8 @@ public class MultipleChoiceActivity extends QuestionActivity{
 
     @Override
     public void setContent() {
-        HashMap options = question.getOptions();
-        if (!options.containsKey("alternatives")){
+        Map<String, Object> options = question.getOptions();
+        if (!options. containsKey("alternatives")){
             Toast.makeText(this, "Faltan las alternativas para esta pregunta.", Toast.LENGTH_LONG).show();
             return;
         }

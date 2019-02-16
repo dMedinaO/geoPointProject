@@ -28,6 +28,13 @@
             android:label="@string/title_activity_polygon"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
+            android:name=".PollEditorActivity"
+            android:label="@string/title_activity_polygon"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".QuestionEditorActivity"
+            android:label="@string/title_activity_polygon" />
+        <activity
             android:name=".PollActivity"
             android:label="@string/title_activity_polygon"
             android:theme="@style/AppTheme.NoActionBar" />

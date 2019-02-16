@@ -3,36 +3,14 @@ package cl.esanhueza.map_david;
 import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Color;
-import android.graphics.Paint;
 import android.preference.PreferenceManager;
 import android.provider.BaseColumns;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
-import org.osmdroid.events.MapEventsReceiver;
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
-import org.osmdroid.util.GeoPoint;
-import org.osmdroid.views.MapView;
-import org.osmdroid.views.Projection;
-import org.osmdroid.views.overlay.ItemizedIconOverlay;
-import org.osmdroid.views.overlay.ItemizedIconOverlay.OnItemGestureListener;
-import org.osmdroid.views.overlay.ItemizedOverlayWithFocus;
-import org.osmdroid.views.overlay.OverlayItem;
-import org.osmdroid.views.overlay.Polygon;
-import org.osmdroid.views.overlay.Polyline;
-import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
-import org.w3c.dom.Text;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import cl.esanhueza.map_david.storage.ResponseContract;
 import cl.esanhueza.map_david.storage.ResponseDbHelper;
@@ -54,11 +32,17 @@ public class MainActivity extends AppCompatActivity {
         mDbHelper = new ResponseDbHelper(getApplicationContext());
         updateResponsesCount();
     }
+
     public void startPoll(View view){
         Intent intent = new Intent(this, PollActivity.class);
         // aqui deberia pasarle la encuesta serializada.
         intent.putExtra("POLL_COUNT", pollsCompleted + 1);
         intent.putExtra("POLL_ID", POLL_ID);
+        startActivity(intent);
+    }
+
+    public void createPoll(View view){
+        Intent intent = new Intent(this, PollEditorActivity.class);
         startActivity(intent);
     }
 

@@ -1,12 +1,9 @@
 package cl.esanhueza.map_david;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -17,21 +14,17 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.osmdroid.api.IMapController;
-import org.osmdroid.config.Configuration;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
-import org.osmdroid.views.Projection;
 import org.osmdroid.views.overlay.ItemizedIconOverlay;
 import org.osmdroid.views.overlay.ItemizedOverlayWithFocus;
 import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.OverlayItem;
-import org.osmdroid.views.overlay.Polyline;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import cl.esanhueza.map_david.models.Question;
@@ -166,11 +159,9 @@ public class PointPlusActivity extends QuestionActivity {
     }
 
     class DrawPointOverlay extends MyLocationNewOverlay{
-
-
         public DrawPointOverlay (MapView mapView) {
             super(mapView);
-            HashMap<String, Object> opts = question.getOptions();
+            Map<String, Object> opts = question.getOptions();
             JSONArray arr;
             try {
                 arr = (JSONArray) opts.get("points");

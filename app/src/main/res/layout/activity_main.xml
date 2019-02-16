@@ -61,6 +61,14 @@
             android:text="Iniciar encuesta" />
 
         <Button
+            android:id="@+id/btncreatepoll"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:onClick="createPoll"
+            android:text="Crear encuesta" />
+
+        <Button
             android:id="@+id/btndeleteall"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

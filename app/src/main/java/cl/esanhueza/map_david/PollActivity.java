@@ -57,12 +57,12 @@ public class PollActivity extends AppCompatActivity {
     String pollJson = "[{\"n\":1, \"title\":\"Dibujar poligono\", \"description\":\"Esta es una descripcion\", \"type\":\"polygon\"}," +
             "{\"n\":2, \"required\":false, \"title\":\"Dibujar ruta\", \"description\":\"Esta es una descripcion\", \"type\":\"route\"}," +
             "{\"n\":3, \"title\":\"Ingresar texto\", \"description\":\"Esta es una descripcion\", \"type\":\"text\"}," +
-            "{\"n\":4, \"title\":\"Selección multiple\", \"description\":\"Esta es una descripcion\", \"type\":\"choice\", \"alternatives\": [\"Opcion 1\", \"Opcion 2\", \"Opcion 3\", \"Opcion 4\"], \"max\":3}, " +
-            "{\"n\":5, \"title\":\"Selección unica\", \"description\":\"Esta es una descripcion\", \"type\":\"choice\", \"alternatives\": [\"Opcion 1\", \"Opcion 2\", \"Opcion 3\", \"Opcion 4\"]}," +
+            "{\"n\":4, \"title\":\"Selección multiple\", \"description\":\"Esta es una descripcion\", \"type\":\"choice\", \"alternatives\": [{\"value\": \"1\", \"label\":\"Opcion 1\"}, {\"value\": \"2\", \"label\":\"Opcion 2\"}, {\"value\": \"3\", \"label\":\"Opcion 3\"}, {\"value\": \"4\", \"label\":\"Opcion 4\"}], \"max\":3}, " +
+            "{\"n\":5, \"title\":\"Selección unica\", \"description\":\"Esta es una descripcion\", \"type\":\"choice\", \"alternatives\": [{\"value\": \"1\", \"label\":\"Opcion 1\"}, {\"value\": \"2\", \"label\":\"Opcion 2\"}, {\"value\": \"3\", \"label\":\"Opcion 3\"}, {\"value\": \"4\", \"label\":\"Opcion 4\"}]}," +
             "{\"n\":6, \"title\":\"Ingresar un punto\", \"description\":\"Ingrese un punto\", \"type\":\"point\" }," +
             "{\"n\":7, \"title\":\"Ingresar un punto con pregunta\", \"description\":\"Seleccione un punto\", \"type\":\"point+\", " +
-                "\"points\" : [{ \"latitude\":-33.4453563917065, \"longitude\":-70.64786536487553}, { \"latitude\":-33.4040745047663, \"longitude\":-70.65084457397461}], " +
-                "\"question\" : {\"title\":\"Pregunta secundaria\", \"description\":\"Descripcion secundaria\", \"type\":\"text\"}}" +
+            "\"points\" : [{ \"latitude\":-33.4453563917065, \"longitude\":-70.64786536487553}, { \"latitude\":-33.4040745047663, \"longitude\":-70.65084457397461}], " +
+            "\"question\" : {\"title\":\"Pregunta secundaria\", \"description\":\"Descripcion secundaria\", \"type\":\"text\"}}" +
             "]";
 
     @Override
@@ -140,17 +140,17 @@ public class PollActivity extends AppCompatActivity {
         }
         if (completed){
             new AlertDialog.Builder(this)
-                .setIcon(android.R.drawable.ic_dialog_alert)
-                .setTitle("Encuesta completada")
-                .setMessage("Ahora podra abandonar la encuesta de forma segura.")
-                .setPositiveButton("Salir", new DialogInterface.OnClickListener()
-                {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        finish();
-                    }
-                })
-                .show();
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .setTitle("Encuesta completada")
+                    .setMessage("Ahora podra abandonar la encuesta de forma segura.")
+                    .setPositiveButton("Salir", new DialogInterface.OnClickListener()
+                    {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            finish();
+                        }
+                    })
+                    .show();
         }
     }
 
@@ -159,19 +159,19 @@ public class PollActivity extends AppCompatActivity {
         for (Question q: questionsList){
             if (q.getState() == "Pendiente" && q.isRequired()){
                 new AlertDialog.Builder(this)
-                    .setIcon(android.R.drawable.ic_dialog_alert)
-                    .setTitle("Encuesta incompleta")
-                    .setMessage("¿Esta seguro que desea abandonar esta encuesta? Se perdera el progreso.")
-                    .setPositiveButton("Abandonar", new DialogInterface.OnClickListener()
-                    {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            removeResponsesFromDb();
-                            finish();
-                        }
-                    })
-                    .setNegativeButton("Cancelar", null)
-                    .show();
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .setTitle("Encuesta incompleta")
+                        .setMessage("¿Esta seguro que desea abandonar esta encuesta? Se perdera el progreso.")
+                        .setPositiveButton("Abandonar", new DialogInterface.OnClickListener()
+                        {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                removeResponsesFromDb();
+                                finish();
+                            }
+                        })
+                        .setNegativeButton("Cancelar", null)
+                        .show();
                 return;
             }
         }
@@ -228,7 +228,7 @@ public class PollActivity extends AppCompatActivity {
 
     private void removeResponsesFromDb(){
         SQLiteDatabase db = mDbHelper.getWritableDatabase();
-               // Insert the new row, returning the primary key value of the new row
+        // Insert the new row, returning the primary key value of the new row
         db.delete(ResponseContract.ResponseEntry.TABLE_NAME, ResponseContract.ResponseEntry.COLUMN_NAME_PERSON_ID + "=" + String.valueOf(pollCount), null);
         db.close();
     }

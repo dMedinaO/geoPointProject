@@ -1,7 +1,5 @@
 package cl.esanhueza.map_david.models;
-import android.util.Log;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -19,10 +17,9 @@ public class Question {
     private String description;
     private String state;
     private boolean required;
-    private HashMap<String, Object> options = new HashMap<String, Object>();
+    private Map<String, Object> options = new HashMap<String, Object>();
 
     public Question(JSONObject obj){
-
         try {
             this.number = obj.getInt("n");
             this.title = obj.optString("title");
@@ -48,6 +45,14 @@ public class Question {
         this.description = (String) obj.get("description");
         this.required = true;
         this.state = "Pendiente";
+    }
+
+    public Question() {
+
+    }
+
+    public void putOption(String key, Object obj){
+        this.options.put(key, obj);
     }
 
     public String toJson(){
@@ -100,7 +105,7 @@ public class Question {
         return description;
     }
 
-    public HashMap<String, Object> getOptions() {
+    public Map<String, Object> getOptions() {
         return options;
     }
 
