@@ -17,7 +17,7 @@ import android.view.ViewGroup;
  * Use the {@link BlankFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class BlankFragment extends Fragment {
+public class BlankFragment extends QuestionEditorFragment {
     final static String KEY = "BLANK";
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER

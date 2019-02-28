@@ -1,85 +1,83 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="@dimen/fab_margin"
     tools:context=".PollEditorActivity">
+
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        tools:layout_editor_absoluteX="16dp"
-        tools:layout_editor_absoluteY="16dp">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/textView"
+        <android.support.design.widget.AppBarLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:text="Seleccione la pregunta"
-            android:textSize="18sp" />
+            android:layout_height="match_parent"
+            android:theme="@style/AppTheme.AppBarOverlay">
+
+            <android.support.v7.widget.Toolbar
+                android:id="@+id/poll_toolbar"
+                style="@style/Widget.AppCompat.ActionBar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="?attr/colorPrimary"
+                android:elevation="4dp"
+                app:titleTextColor="@android:color/white" />
+
+        </android.support.design.widget.AppBarLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="19sp"
             android:orientation="horizontal"
-            android:weightSum="12">
+            android:weightSum="3">
 
             <TextView
-                android:id="@+id/questionnumber"
-                android:layout_width="0dp"
+                android:id="@+id/textView3"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="#"
-                android:textSize="13sp"
-                android:textStyle="bold" />
+                android:width="0dp"
+                android:text="Posicion: " />
 
             <TextView
-                android:id="@+id/questiontitle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="9"
-                android:ellipsize="end"
-                android:text="Titulo"
-                android:textStyle="bold"
-                android:textSize="13sp" />
-
-            <TextView
-                android:id="@+id/state"
-                android:layout_width="0dp"
+                android:id="@+id/position"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="2"
-                android:text="Estado"
-                android:textStyle="bold"
-                android:textSize="13sp" />
+                android:width="0dp"
+                android:text=" " />
         </LinearLayout>
 
 
-        <ScrollView
-            android:layout_marginTop="19sp"
+        <TextView
+            android:id="@+id/polldescription"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp"
+            android:layout_marginTop="4dp"
+            android:text="TextView"
+            android:textAppearance="@android:style/TextAppearance.Material.Medium" />
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clickable="true"
+            android:descendantFocusability="beforeDescendants"
+            android:orientation="vertical">
 
-            <LinearLayout
+            <ListView
+                android:id="@+id/question_list"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical" >
+                android:layout_height="match_parent">
 
-                <TableLayout
-                    android:id="@+id/tablequestions"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="start">
-
-                </TableLayout>
-            </LinearLayout>
-        </ScrollView>
+            </ListView>
+        </LinearLayout>
 
     </LinearLayout>
 
-</android.support.constraint.ConstraintLayout>
+</android.support.design.widget.CoordinatorLayout>

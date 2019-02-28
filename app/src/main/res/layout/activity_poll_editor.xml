@@ -4,63 +4,49 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="@dimen/fab_margin"
     tools:context=".PollEditorActivity">
 
-
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="Seleccione la pregunta"
-        android:textSize="18sp" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="19sp"
-        android:orientation="horizontal"
-        android:weightSum="12">
+        android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/questionnumber"
-            android:layout_width="0dp"
+        <android.support.design.widget.AppBarLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:theme="@style/AppTheme.AppBarOverlay">
+
+            <android.support.v7.widget.Toolbar
+                android:id="@+id/poll_toolbar"
+                style="@style/Widget.AppCompat.ActionBar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="?attr/colorPrimary"
+                android:elevation="4dp"
+                app:titleTextColor="@android:color/white" />
+
+        </android.support.design.widget.AppBarLayout>
+
+        <EditText
+            android:id="@+id/polltitle"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="#"
-            android:textSize="13sp"
-            android:textStyle="bold" />
+            android:ems="10"
+            android:inputType="textPersonName"
+            android:text="Titulo" />
 
-        <TextView
-            android:id="@+id/questiontitle"
-            android:layout_width="0dp"
+        <EditText
+            android:id="@+id/polldescription"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="9"
-            android:ellipsize="end"
-            android:text="Titulo"
-            android:textSize="13sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/type"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="2"
-            android:text="Tipo"
-            android:textSize="13sp"
-            android:textStyle="bold" />
-    </LinearLayout>
-
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/scrolllist"
-        android:layout_marginTop="19sp">
+            android:ems="10"
+            android:inputType="textMultiLine"
+            android:text="Descripcion" />
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:orientation="vertical">
 
             <ListView
@@ -70,7 +56,8 @@
 
             </ListView>
         </LinearLayout>
-    </ScrollView>
+
+    </LinearLayout>
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
@@ -79,9 +66,8 @@
         android:layout_gravity="bottom|right"
         android:layout_margin="16dp"
         android:onClick="handleNewQuestion"
-        app:layout_anchorGravity="bottom|right|end"
-        app:layout_anchor="@id/scrolllist"
         android:src="@drawable/ic_add_black_24dp"
-        android:tint="#ffffff" />
+        android:tint="#ffffff"
+        app:layout_anchorGravity="bottom|right|end" />
 
 </android.support.design.widget.CoordinatorLayout>

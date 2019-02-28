@@ -16,13 +16,17 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity">
+
+        <activity
+            android:name=".PollListActivity"
+            android:label="@string/title_activity_poll_list"
+            android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".PolygonActivity"
             android:label="@string/title_activity_polygon"
@@ -41,23 +45,23 @@
         <activity
             android:name=".RouteActivity"
             android:label="@string/title_activity_route"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".TextActivity"
             android:label="@string/title_activity_route"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".MultipleChoiceActivity"
             android:label="@string/title_activity_route"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".PointActivity"
             android:label="@string/title_activity_route"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".PointPlusActivity"
             android:label="@string/title_activity_route"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
     </application>
 
 </manifest>

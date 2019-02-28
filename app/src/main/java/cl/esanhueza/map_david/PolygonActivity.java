@@ -68,7 +68,11 @@ public class PolygonActivity extends QuestionActivity {
 
         mPointsOverlay = new DrawPolygonOverlay(mMap);
         mMap.getOverlays().add(mPointsOverlay);
+        if (currentPosition != null){
+            mMap.getController().setCenter(currentPosition);
+        }
     }
+
 
     public int getContentViewId(){
         return R.layout.activity_polygon;

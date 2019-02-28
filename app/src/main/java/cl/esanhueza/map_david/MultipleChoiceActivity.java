@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.osmdroid.util.GeoPoint;
 
 import java.util.ArrayList;
@@ -62,9 +63,10 @@ public class MultipleChoiceActivity extends QuestionActivity{
         if (maxSelected > 1){
             for (int i=0; i<jsonArray.length(); i++){
                 try {
-                    String alt = jsonArray.getString(i);
+                    JSONObject alt = jsonArray.getJSONObject(i);
                     CheckBox box = new CheckBox(getApplicationContext());
-                    box.setText(alt);
+                    box.setText(alt.getString("label"));
+                    box.setContentDescription(alt.getString("value"));
                     boxes.add(box);
                     linearLayout.addView(box);
                 } catch (JSONException e) {
@@ -77,9 +79,10 @@ public class MultipleChoiceActivity extends QuestionActivity{
             linearLayout.addView(radioGroup);
             for (int i=0; i<jsonArray.length(); i++){
                 try {
-                    String alt = jsonArray.getString(i);
+                    JSONObject alt = jsonArray.getJSONObject(i);
                     RadioButton btn = new RadioButton(getApplicationContext());
-                    btn.setText(alt);
+                    btn.setText(alt.getString("label"));
+                    btn.setContentDescription(alt.getString("value"));
                     radioGroup.addView(btn);
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -96,7 +99,7 @@ public class MultipleChoiceActivity extends QuestionActivity{
             String values = "";
             for (CheckBox box : boxes) {
                 if (box.isChecked()) {
-                    values = values + box.getText() + ",";
+                    values = values + box.getContentDescription() + ",";
                 }
             }
             if (values != ""){
@@ -116,7 +119,7 @@ public class MultipleChoiceActivity extends QuestionActivity{
                 setResult(Activity.RESULT_CANCELED, intent);
             }
             else{
-                String value = (String) ((RadioButton) findViewById(idSelected)).getText();
+                String value = (String) ((RadioButton) findViewById(idSelected)).getContentDescription();
                 intent.setData(Uri.parse(value));
                 setResult(Activity.RESULT_OK, intent);
             }

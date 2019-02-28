@@ -1,20 +1,37 @@
 package cl.esanhueza.map_david;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.PendingIntent;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Build;
 import android.provider.BaseColumns;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.AppCompatImageView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -23,6 +40,7 @@ import android.widget.Toast;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.osmdroid.util.GeoPoint;
 import org.w3c.dom.Text;
 
 import java.util.ArrayList;
@@ -38,7 +56,7 @@ import static cl.esanhueza.map_david.R.color.colorSecondary;
 import static cl.esanhueza.map_david.R.drawable.ic_check_box_black_24dp;
 
 public class PollActivity extends AppCompatActivity {
-    static final public HashMap QUESTION_TYPE_LIST = new HashMap<String, java.lang.Class>(){{
+    static final public HashMap QUESTION_TYPE_LIST = new HashMap<String, java.lang.Class>() {{
         put("polygon", PolygonActivity.class);
         put("route", RouteActivity.class);
         put("text", TextActivity.class);
@@ -47,23 +65,18 @@ public class PollActivity extends AppCompatActivity {
         put("point+", PointPlusActivity.class);
     }};
 
+    private LocationManager mLocationManager;
+    private LocationListener mLocationListener;
+    private GeoPoint currentLocation;
 
-    TableLayout mTableQuestions;
-    ArrayList<Question> questionsList;
+    ArrayList<Question> questionsList = new ArrayList<>();
     ResponseDbHelper mDbHelper;
-    int pollId;
+    String pollId;
     int pollCount;
 
-    String pollJson = "[{\"n\":1, \"title\":\"Dibujar poligono\", \"description\":\"Esta es una descripcion\", \"type\":\"polygon\"}," +
-            "{\"n\":2, \"required\":false, \"title\":\"Dibujar ruta\", \"description\":\"Esta es una descripcion\", \"type\":\"route\"}," +
-            "{\"n\":3, \"title\":\"Ingresar texto\", \"description\":\"Esta es una descripcion\", \"type\":\"text\"}," +
-            "{\"n\":4, \"title\":\"Selección multiple\", \"description\":\"Esta es una descripcion\", \"type\":\"choice\", \"alternatives\": [{\"value\": \"1\", \"label\":\"Opcion 1\"}, {\"value\": \"2\", \"label\":\"Opcion 2\"}, {\"value\": \"3\", \"label\":\"Opcion 3\"}, {\"value\": \"4\", \"label\":\"Opcion 4\"}], \"max\":3}, " +
-            "{\"n\":5, \"title\":\"Selección unica\", \"description\":\"Esta es una descripcion\", \"type\":\"choice\", \"alternatives\": [{\"value\": \"1\", \"label\":\"Opcion 1\"}, {\"value\": \"2\", \"label\":\"Opcion 2\"}, {\"value\": \"3\", \"label\":\"Opcion 3\"}, {\"value\": \"4\", \"label\":\"Opcion 4\"}]}," +
-            "{\"n\":6, \"title\":\"Ingresar un punto\", \"description\":\"Ingrese un punto\", \"type\":\"point\" }," +
-            "{\"n\":7, \"title\":\"Ingresar un punto con pregunta\", \"description\":\"Seleccione un punto\", \"type\":\"point+\", " +
-            "\"points\" : [{ \"latitude\":-33.4453563917065, \"longitude\":-70.64786536487553}, { \"latitude\":-33.4040745047663, \"longitude\":-70.65084457397461}], " +
-            "\"question\" : {\"title\":\"Pregunta secundaria\", \"description\":\"Descripcion secundaria\", \"type\":\"text\"}}" +
-            "]";
+    PollActivity.QuestionAdapter mAdapter;
+    ListView listView;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,30 +86,80 @@ public class PollActivity extends AppCompatActivity {
         Intent intent = getIntent();
         Bundle bundle = intent.getExtras();
         pollCount = bundle.getInt("POLL_COUNT");
-        pollId = Integer.valueOf(bundle.getString("POLL_ID"));
+        pollId = bundle.getString("POLL_ID");
+        String poll = bundle.getString("POLL");
 
-        mTableQuestions = findViewById(R.id.tablequestions);
-        questionsList = new ArrayList<Question>();
         try {
-            JSONArray jsonArray = new JSONArray(pollJson);
-            for (int i=0; i<jsonArray.length(); i++){
-                questionsList.add(new Question(jsonArray.getJSONObject(i)));
+            JSONObject pollJson = new JSONObject(poll);
+            setTitle(pollJson.getString("title"));
+            TextView viewDescription = findViewById(R.id.polldescription);
+            viewDescription.setText(pollJson.getString("description"));
+            JSONArray questionArray = pollJson.getJSONArray("questions");
+            for (int i=0; i<questionArray.length(); i++){
+                questionsList.add(new Question(questionArray.getJSONObject(i)));
             }
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        updateTable();
+
         mDbHelper = new ResponseDbHelper(getApplicationContext());// Gets the data repository in write mode
+
+        mLocationManager = (LocationManager) this.getSystemService(LOCATION_SERVICE);
+        mLocationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+                currentLocation = new GeoPoint(location.getLatitude(), location.getLongitude());
+                TextView positionView = findViewById(R.id.position);
+                positionView.setText(String.valueOf(location.getLatitude()) + ", " + String.valueOf(location.getLongitude()));
+            }
+
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+                Log.d("TEST ENCUESTA: ", "onStatusChanged");
+            }
+
+            @Override
+            public void onProviderEnabled(String provider) {
+                Log.d("TEST ENCUESTA: ", "onProviderEnabled");
+            }
+
+            @Override
+            public void onProviderDisabled(String provider) {
+                Log.d("TEST ENCUESTA: ", "onProviderDisabled");
+            }
+        };
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+        }
+        else {
+            Log.d("TEST ENCUESTA: ", "Actualizando posicion.");
+            mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mLocationListener);
+        }
+
+        mAdapter = new PollActivity.QuestionAdapter(this, questionsList);
+        listView = findViewById(R.id.question_list);
+        listView.setAdapter(mAdapter);
+
+        // al dar click sobre una fila, pasar pregunta al editor de preguntas
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Log.d("TST ENCUESTAS: ", String.valueOf(position));
+                openQuestion(questionsList.get(position));
+            }
+        });
+
+        mAdapter.notifyDataSetChanged();
     }
 
-
-    public void handleRowClick(View view){
-        TableRow row = (TableRow) view;
-        int number = Integer.valueOf((String) ((TextView)row.getChildAt(0)).getText());
-        Log.d("Test mob: ", "openQuestion " + String.valueOf(number));
-        Question q = findQuestionByNumber(number);
-        if (q != null){
-            openQuestion(q);
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults){
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
+                //mLocationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, mLocationListener, null);
+                mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mLocationListener);
+            }
         }
     }
 
@@ -109,6 +172,9 @@ public class PollActivity extends AppCompatActivity {
         java.lang.Class activity = (Class) QUESTION_TYPE_LIST.get(q.getType());
         Intent intent = new Intent(this, activity);
         intent.putExtra("QUESTION", q.toJson());
+        if (currentLocation != null){
+            intent.putExtra("POSITION", "{\"latitude\": " + String.valueOf(currentLocation.getLatitude()) + ", \"longitude\": "+ String.valueOf(currentLocation.getLongitude()) +"}");
+        }
         startActivityForResult(intent, q.getNumber());
     }
 
@@ -121,8 +187,8 @@ public class PollActivity extends AppCompatActivity {
             Question q = findQuestionByNumber(requestCode);
             if (q != null){
                 q.setState("Contestada");
-                updateTable();
                 saveResponseToDb(q.getNumber(), returnedResult);
+                mAdapter.notifyDataSetChanged();
                 checkCompleted();
             }
         }
@@ -180,38 +246,6 @@ public class PollActivity extends AppCompatActivity {
     }
 
 
-
-    public void updateTable(){
-        mTableQuestions.removeAllViews();
-        for (Question q: questionsList){
-            TableRow row = (TableRow) LayoutInflater.from(this).inflate(R.layout.polltable_row, null);
-            ((TextView)row.getChildAt(0)).setText(String.valueOf(q.getNumber()));
-            TextView titleView = (TextView)row.getChildAt(1);
-            titleView.setText(q.getTitle());
-            if (q.isRequired()){
-                titleView.setTextColor(getColor(R.color.colorInfo));
-            }
-            ImageView stateView = (ImageView) row.getChildAt(2);
-            //stateView.setText(q.getState());
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                if (q.getState() == "Pendiente"){
-                    stateView.setImageDrawable(getDrawable(R.drawable.ic_check_box_outline_blank_black_24dp));
-                }
-                else{
-                    stateView.setImageDrawable(getDrawable(R.drawable.ic_check_box_black_24dp));
-                }
-            }
-            else{
-                row.removeViewAt(2);
-                TextView textView = new TextView(this);
-                textView.setText(q.getState());
-                row.addView(textView);
-            }
-
-            mTableQuestions.addView(row);
-        }
-    }
-
     private void saveResponseToDb(int idQuestion, String content){
         SQLiteDatabase db = mDbHelper.getWritableDatabase();
         // Create a new map of values, where column names are the keys
@@ -249,5 +283,48 @@ public class PollActivity extends AppCompatActivity {
     protected void onDestroy() {
         mDbHelper.close();
         super.onDestroy();
+    }
+
+    public class QuestionAdapter extends ArrayAdapter<Question> {
+
+        private Context mContext;
+        private List<Question> questionList = new ArrayList<>();
+
+        public QuestionAdapter(@NonNull Context context, ArrayList<Question> list) {
+            super(context, 0 , list);
+            mContext = context;
+            questionList = list;
+        }
+
+        @NonNull
+        @Override
+        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+            View listItem = convertView;
+            if(listItem == null) {
+                listItem = LayoutInflater.from(mContext).inflate(R.layout.listview_question, parent, false);
+            }
+
+            final Question currentQuestion = questionList.get(position);
+
+            currentQuestion.setNumber(position);
+            TextView number = (TextView) listItem.findViewById(R.id.question_number);
+            number.setText(String.valueOf(position + 1));
+
+            TextView titleView = (TextView) listItem.findViewById(R.id.question_title);
+            titleView.setText(currentQuestion.getTitle());
+            if (!currentQuestion.isRequired()){
+                titleView.setTextColor(getResources().getColor(R.color.colorSecondary));
+            }
+
+            AppCompatImageView stateView = (AppCompatImageView) listItem.findViewById(R.id.question_state);
+            if (currentQuestion.getState() != "Contestada"){
+                stateView.setImageResource(R.drawable.ic_check_box_outline_blank_black_24dp);
+            }
+            else{
+                stateView.setImageResource(R.drawable.ic_check_box_black_24dp);
+            }
+
+            return listItem;
+        }
     }
 }

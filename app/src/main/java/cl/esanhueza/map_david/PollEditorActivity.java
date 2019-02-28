@@ -5,17 +5,24 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.media.MediaScannerConnection;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.JsonReader;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -24,13 +31,22 @@ import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.w3c.dom.Text;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 
 
 import cl.esanhueza.map_david.models.Choice;
+import cl.esanhueza.map_david.models.Poll;
 import cl.esanhueza.map_david.models.Question;
+import cl.esanhueza.map_david.storage.PollFileStorageHelper;
 
 
 public class PollEditorActivity extends AppCompatActivity {
@@ -38,41 +54,179 @@ public class PollEditorActivity extends AppCompatActivity {
     static final public int EDIT_QUESTION_CODE = 1;
     QuestionAdapter mAdapter;
     ListView listView;
+    Context mContext;
+    Poll poll = new Poll();
 
     static final public HashMap QUESTION_TYPE_LIST = new HashMap<String, String>(){{
         put("choice", "Alternativa");
-        put("polygon", "Poligono");
-        put("route", "Ruta");
         put("text", "Texto");
-        put("point", "Puntos en mapa");
+        // put("polygon", "Poligono");
+        // put("route", "Ruta");
+        // put("point", "Puntos en mapa");
     }};
 
-    TableLayout mTableQuestions;
-    ArrayList<Question> questionsList;
+    ArrayList<Question> questionsList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_poll_editor);
         Intent intent = getIntent();
-        mTableQuestions = findViewById(R.id.tablequestions);
-        questionsList = new ArrayList<Question>();
 
-        QuestionAdapter mAdapter = new QuestionAdapter(this, questionsList);
+        if (intent.hasExtra("POLL")){
+            try {
+                poll = new Poll(new JSONObject(intent.getStringExtra("POLL")));
+                TextView titleView = findViewById(R.id.polltitle);
+                TextView descriptionView = findViewById(R.id.polldescription);
+                titleView.setText(poll.getTitle());
+                descriptionView.setText(poll.getDescription());
+                questionsList.addAll(poll.getQuestions());
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        String uuid = UUID.randomUUID().toString().replace("-", "");
+        poll.setId(uuid);
+
+        mContext = getApplicationContext();
+
+        mAdapter = new QuestionAdapter(this, questionsList);
         listView = findViewById(R.id.question_list);
         listView.setAdapter(mAdapter);
+
+        // al mantener presionado una fila, solicitar confirmacion para eliminar fila
+        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
+                new AlertDialog.Builder(PollEditorActivity.this)
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .setTitle("¿Desea eliminar la pregunta?")
+                        .setMessage("Esta accion no puede revertirse.")
+                        .setNegativeButton("Cancelar", new DialogInterface.OnClickListener()
+                        {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+
+                            }
+                        })
+                        .setPositiveButton("Eliminar", new DialogInterface.OnClickListener()
+                        {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                questionsList.remove(position);
+                                mAdapter.notifyDataSetChanged();
+                            }
+                        })
+                        .show();
+                return true;
+            }
+        });
+
+        // al dar click sobre una fila, pasar pregunta al editor de preguntas
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Intent intent = new Intent(PollEditorActivity.this, QuestionEditorActivity.class);
+                Question q = questionsList.get(position);
+                intent.putExtra("QUESTION", q.toJson());
+                startActivityForResult(intent, 0);
+            }
+        });
+
+        Toolbar myToolbar = (Toolbar) findViewById(R.id.poll_toolbar);
+        myToolbar.setTitle("Editor de encuesta");
+        setSupportActionBar(myToolbar);
+
     }
 
-    public void handleRowClick(View view){
-        TableRow row = (TableRow) view;
-        int number = Integer.valueOf((String) ((TextView)row.getChildAt(0)).getText());
-        Log.d("Test mob: ", "openQuestion " + String.valueOf(number));
-        Question q = findQuestionByNumber(number);
-        Intent intent = new Intent(this, QuestionEditorActivity.class);
-        if (q != null){
-            intent.putExtra("QUESTION", q.toJson());
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_poll_editor, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_cancel:
+                    new AlertDialog.Builder(this)
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .setTitle("¿Esta seguro que desea abandonar la encuesta?")
+                        .setMessage("Se perderan los cambios realizados.")
+                        .setNegativeButton("Cancelar", new DialogInterface.OnClickListener()
+                            {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+
+                                }
+                            })
+                        .setPositiveButton("Salir", new DialogInterface.OnClickListener()
+                        {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                finish();
+                            }
+                        })
+                        .show();
+                return true;
+
+            case R.id.action_save_poll:
+
+                new AlertDialog.Builder(this)
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .setTitle("Confirmar")
+                        .setMessage("Se guardara la encuesta actual como una nueva encuesta.")
+                        .setNegativeButton("Cancelar", new DialogInterface.OnClickListener()
+                        {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+
+                            }
+                        })
+                        .setPositiveButton("Guardar y salir", new DialogInterface.OnClickListener()
+                        {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                savePoll();
+                            }
+                        })
+                        .show();
+                return true;
+
+            default:
+                // If we got here, the user's action was not recognized.
+                // Invoke the superclass to handle it.
+                return super.onOptionsItemSelected(item);
+
         }
-        startActivityForResult(intent, 0);
+    }
+
+    public void savePoll(){
+        TextView titleView = findViewById(R.id.polltitle);
+        TextView descriptionView = findViewById(R.id.polldescription);
+        poll.setTitle(titleView.getText().toString());
+        poll.setDescription(descriptionView.getText().toString());
+        poll.getQuestions().clear();
+        for (Question q : questionsList){
+            poll.addQuestion(q);
+        }
+
+        String result = PollFileStorageHelper.savePoll(poll);
+        if (result != null){
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                MediaScannerConnection.scanFile(this, new String[]{result}, null, new MediaScannerConnection.OnScanCompletedListener() {
+                    public void onScanCompleted(String path, Uri uri) {
+                    }
+                });
+            } else {
+                this.sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED,
+                        Uri.parse("file://" + result)));
+            }
+        }
+        setResult(Activity.RESULT_OK);
+        finish();
     }
 
     public void handleNewQuestion(View view){
@@ -86,15 +240,26 @@ public class PollEditorActivity extends AppCompatActivity {
             Log.d("Result", "Pregunta contestada, respuesta: " + returnedResult);
 
             Toast.makeText(this, returnedResult, Toast.LENGTH_LONG).show();
-            Question q = findQuestionByNumber(requestCode);
-            if (q != null){
-                if (questionsList.contains(q)){
-                    questionsList.set(questionsList.indexOf(q), q);
-                }
-                else{
-                    questionsList.add(q);
-                }
+
+            JSONObject obj = new JSONObject();
+            try {
+                obj = new JSONObject(data.getData().toString());
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
+
+            Question q = new Question(obj);
+
+            if (q.getNumber() >= 0){
+                Log.i("TST ENCUESTA: ", "Pregunta actualizada");
+                questionsList.set(q.getNumber(), q);
+            }
+            else{
+                Log.i("TST ENCUESTA: ", "Pregunta agregada");
+                questionsList.add(q);
+            }
+            mAdapter.notifyDataSetChanged();
+
         }
         else{
             Log.d("Result", "Pregunta cerrada sin terminar de contestar.");
@@ -111,13 +276,12 @@ public class PollEditorActivity extends AppCompatActivity {
                 {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+                        setResult(Activity.RESULT_CANCELED);
                         finish();
                     }
                 })
                 .setNegativeButton("Cancelar", null)
                 .show();
-        // Otherwise defer to system default behavior.
-        super.onBackPressed();
     }
 
     private Question findQuestionByNumber(int n){
@@ -150,19 +314,28 @@ public class PollEditorActivity extends AppCompatActivity {
         @Override
         public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
             View listItem = convertView;
-            if(listItem == null)
-                listItem = LayoutInflater.from(mContext).inflate(R.layout.listview_choice_item, parent,false);
+            if(listItem == null) {
+                listItem = LayoutInflater.from(mContext).inflate(R.layout.listview_new_question, parent, false);
+                Log.i("TST ENCUESTA: ", "INFLATE");
+            }
+
+            Log.i("TST ENCUESTA: ", String.valueOf(position));
 
             final Question currentQuestion = questionList.get(position);
 
-            TextView number = (TextView) listItem.findViewById(R.id.number);
-            number.setText("#" + String.valueOf(position));
+            Log.i("TST ENCUESTA: ", currentQuestion.toJson());
 
-            final TextView titleView = (TextView) listItem.findViewById(R.id.value);
+            currentQuestion.setNumber(position);
+            TextView number = (TextView) listItem.findViewById(R.id.question_number);
+            number.setText(String.valueOf(position + 1));
+
+            TextView titleView = (TextView) listItem.findViewById(R.id.question_title);
             titleView.setText(currentQuestion.getTitle());
 
-            TextView typeView = (TextView) listItem.findViewById(R.id.label);
-            typeView.setText(currentQuestion.getType());
+            TextView typeView = (TextView) listItem.findViewById(R.id.question_type);
+            typeView.setText(QUESTION_TYPE_LIST.get(currentQuestion.getType()).toString());
+
+            Log.i("TST ENCUESTA: ", listView.toString());
 
             return listItem;
         }

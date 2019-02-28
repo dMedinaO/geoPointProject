@@ -8,6 +8,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +16,10 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,26 +37,31 @@ import cl.esanhueza.map_david.models.Choice;
  * Use the {@link ChoicesEditorFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class ChoicesEditorFragment extends Fragment {
+public class ChoicesEditorFragment extends QuestionEditorFragment {
     private ListView listView;
     private ChoiceAdapter mAdapter;
     private ArrayList<Choice> choicesList = new ArrayList<Choice>();
     private OnFragmentInteractionListener mListener;
 
-    public Map<String, String> getQuestion(){
+    public Map<String, Object> getOptions(){
         mAdapter.notifyDataSetChanged();
-        Map<String, String> map = new HashMap<String, String>();
-        String alternatives = "";
+        Map<String, Object> map = new HashMap<String, Object>();
+        JSONArray alternativesArray = new JSONArray();
 
         for (int i=0; i<mAdapter.getCount(); i++){
             Choice choice = mAdapter.getItem(i);
-            alternatives += "{\"label\": \"" + choice.getLabel()  + "\", \"value\": \""+ choice.getValue() +"\"},";
-        }
-        alternatives = alternatives.substring(0, alternatives.length() - 1);
-        alternatives = "[" + alternatives + "]";
+            JSONObject jsonObject = new JSONObject();
 
+            try {
+                jsonObject.put("label", choice.getLabel());
+                jsonObject.put("value", choice.getValue());
+                alternativesArray.put(jsonObject);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
         TextView maxView = this.getView().findViewById(R.id.max_choices);
-        map.put("alternatives", alternatives);
+        map.put("alternatives", alternativesArray);
         map.put("max", String.valueOf(maxView.getText()));
         return map;
     }
@@ -82,7 +92,23 @@ public class ChoicesEditorFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         mAdapter = new ChoiceAdapter(getContext(), choicesList);
+
+        Log.i("TST ASD", options.get("alternatives").toString());
+        JSONArray alternativesArray = (JSONArray) options.get("alternatives");
+
+        for (int i=0; i<alternativesArray.length(); i++){
+            JSONObject obj = null;
+            try {
+                obj = alternativesArray.getJSONObject(i);
+                choicesList.add(new Choice(obj.getString("value"), obj.getString("label")));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        mAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -162,7 +188,7 @@ public class ChoicesEditorFragment extends Fragment {
 
             final Choice currentChoice = choicesList.get(position);
 
-            TextView number = (TextView) listItem.findViewById(R.id.number);
+            TextView number = (TextView) listItem.findViewById(R.id.choice_number);
             number.setText(String.valueOf(position));
 
             final TextView valueView = (TextView) listItem.findViewById(R.id.value);
