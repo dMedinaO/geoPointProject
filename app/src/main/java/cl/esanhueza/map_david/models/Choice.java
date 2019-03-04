@@ -24,4 +24,9 @@ public class Choice {
     public void setLabel(String label) {
         this.label = label;
     }
+
+    @Override
+    public String toString() {
+        return "CHOICE("+ this.label +", "+ this.value +")";
+    }
 }

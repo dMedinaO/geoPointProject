@@ -1,6 +1,9 @@
 package cl.esanhueza.map_david;
 
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -14,12 +17,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 
 import cl.esanhueza.map_david.models.Choice;
+import cl.esanhueza.map_david.storage.PollFileStorageHelper;
 
 
 /**
@@ -42,6 +48,35 @@ public class ChoicesEditorFragment extends QuestionEditorFragment {
     private ChoiceAdapter mAdapter;
     private ArrayList<Choice> choicesList = new ArrayList<Choice>();
     private OnFragmentInteractionListener mListener;
+
+    @Override
+    public boolean validate(){
+        TextView maxView = this.getView().findViewById(R.id.max_choices);
+        int max = Integer.valueOf(maxView.getText().toString());
+        String error = null;
+        if (mAdapter.getCount() == 0){
+            error = "Una pregunta con alternativas debe tener dos alternativas como minimo.\n";
+        }
+        if (mAdapter.getCount() < max){
+            error = "El número de opciones seleccionables debe ser menor o igual al número de alternativas ingresadas.\n";
+        }
+        if (error != null){
+            new AlertDialog.Builder(getContext())
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .setTitle("Error")
+                    .setMessage(error)
+                    .setPositiveButton("Aceptar", new DialogInterface.OnClickListener()
+                    {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+
+                        }
+                    })
+                    .show();
+            return false;
+        }
+        return true;
+    }
 
     public Map<String, Object> getOptions(){
         mAdapter.notifyDataSetChanged();
@@ -71,8 +106,15 @@ public class ChoicesEditorFragment extends QuestionEditorFragment {
     }
 
     public void addChoice(){
-        choicesList.add(new Choice("Valor", "Texto"));
-        mAdapter.notifyDataSetChanged();
+        choicesList.clear();
+        for (int i=0; i<mAdapter.getCount(); i++){
+            TextView valueView = listView.findViewWithTag("value" + String.valueOf(i));
+            TextView labelView = listView.findViewWithTag("label" + String.valueOf(i));
+            choicesList.add(new Choice(valueView.getText().toString(), labelView.getText().toString()));
+        }
+        mAdapter.clear();
+        choicesList.add(new Choice("Valor", "Texto" + String.valueOf(choicesList.size())));
+        mAdapter.addAll(choicesList);
     }
 
     /**
@@ -93,16 +135,21 @@ public class ChoicesEditorFragment extends QuestionEditorFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mAdapter = new ChoiceAdapter(getContext(), choicesList);
+        mAdapter = new ChoiceAdapter(getContext(), new ArrayList<Choice>(choicesList));
 
-        Log.i("TST ASD", options.get("alternatives").toString());
-        JSONArray alternativesArray = (JSONArray) options.get("alternatives");
+        JSONArray alternativesArray = null;
+        if (options.containsKey("alternatives")){
+            alternativesArray = (JSONArray) options.get("alternatives");
+        }
+        else{
+            alternativesArray = new JSONArray();
+        }
 
         for (int i=0; i<alternativesArray.length(); i++){
             JSONObject obj = null;
             try {
                 obj = alternativesArray.getJSONObject(i);
-                choicesList.add(new Choice(obj.getString("value"), obj.getString("label")));
+                mAdapter.add(new Choice(obj.getString("value"), obj.getString("label")));
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -169,59 +216,46 @@ public class ChoicesEditorFragment extends QuestionEditorFragment {
     }
 
     public class ChoiceAdapter extends ArrayAdapter<Choice> {
-
         private Context mContext;
-        private List<Choice> choicesList = new ArrayList<>();
+        private ArrayList<Choice> itemList;
 
         public ChoiceAdapter(@NonNull Context context, ArrayList<Choice> list) {
             super(context, 0 , list);
             mContext = context;
-            choicesList = list;
+            itemList = list;
         }
 
         @NonNull
         @Override
-        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+        public View getView(final int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+            Log.d("TST ENCUESTAS: ", choicesList.get(position).toString());
             View listItem = convertView;
             if(listItem == null)
                 listItem = LayoutInflater.from(mContext).inflate(R.layout.listview_choice_item, parent,false);
 
-            final Choice currentChoice = choicesList.get(position);
+            final Choice currentChoice = itemList.get(position);
 
             TextView number = (TextView) listItem.findViewById(R.id.choice_number);
             number.setText(String.valueOf(position));
 
             final TextView valueView = (TextView) listItem.findViewById(R.id.value);
+            valueView.setTag("value" + String.valueOf(position));
             valueView.setText(currentChoice.getValue());
-            valueView.addTextChangedListener(new TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
-                @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    currentChoice.setValue(String.valueOf(s));
-                }
-
-                @Override
-                public void afterTextChanged(Editable s) {}
-            });
-
-
-            TextView labelView = (TextView) listItem.findViewById(R.id.label);
+            final TextView labelView = (TextView) listItem.findViewById(R.id.label);
+            labelView.setTag("label" + String.valueOf(position));
             labelView.setText(currentChoice.getLabel());
-            labelView.addTextChangedListener(new TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
+            ImageButton removeBtn = (ImageButton) listItem.findViewById(R.id.btn_remove_choice);
+            removeBtn.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    currentChoice.setLabel(String.valueOf(s));
+                public void onClick(View v) {
+                    Log.d("TST ENCUESTAS: ", "Position: " + String.valueOf(position));
+                    Log.d("TST ENCUESTAS: ", "Eliminando: " + currentChoice.toString());
+                    remove(currentChoice);
+                    notifyDataSetChanged();
                 }
-
-                @Override
-                public void afterTextChanged(Editable s) {}
             });
-
             return listItem;
         }
     }

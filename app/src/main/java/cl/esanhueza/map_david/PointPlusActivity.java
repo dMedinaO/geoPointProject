@@ -123,12 +123,12 @@ public class PointPlusActivity extends QuestionActivity {
         }
         Question q = new Question(obj);
         // se revisa si el tipo de pregunta esta previamente implementado.
-        if (!PollActivity.QUESTION_TYPE_LIST.containsKey(q.getType())){
+        if (!PollActiveActivity.QUESTION_TYPE_LIST.containsKey(q.getType())){
             Toast.makeText(this, "El tipo de pregunta seleccionado no está implementado.", Toast.LENGTH_LONG).show();
             return;
         }
 
-        java.lang.Class activity = (Class) PollActivity.QUESTION_TYPE_LIST.get(q.getType());
+        java.lang.Class activity = (Class) PollActiveActivity.QUESTION_TYPE_LIST.get(q.getType());
         Intent intent = new Intent(this, activity);
         intent.putExtra("QUESTION", q.toJson());
         startActivityForResult(intent, q.getNumber());

@@ -34,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void startPoll(View view){
-        Intent intent = new Intent(this, PollActivity.class);
+        Intent intent = new Intent(this, PollActiveActivity.class);
         // aqui deberia pasarle la encuesta serializada.
         intent.putExtra("POLL_COUNT", pollsCompleted + 1);
         intent.putExtra("POLL_ID", POLL_ID);

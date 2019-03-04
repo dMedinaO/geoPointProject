@@ -86,9 +86,6 @@ public class PollEditorActivity extends AppCompatActivity {
             }
         }
 
-        String uuid = UUID.randomUUID().toString().replace("-", "");
-        poll.setId(uuid);
-
         mContext = getApplicationContext();
 
         mAdapter = new QuestionAdapter(this, questionsList);
@@ -135,7 +132,7 @@ public class PollEditorActivity extends AppCompatActivity {
         });
 
         Toolbar myToolbar = (Toolbar) findViewById(R.id.poll_toolbar);
-        myToolbar.setTitle("Editor de encuesta");
+        myToolbar.setTitle("Editor");
         setSupportActionBar(myToolbar);
 
     }
@@ -150,22 +147,24 @@ public class PollEditorActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.action_cancel:
-                    new AlertDialog.Builder(this)
+            case R.id.action_delete_poll:
+                new AlertDialog.Builder(this)
                         .setIcon(android.R.drawable.ic_dialog_alert)
-                        .setTitle("¿Esta seguro que desea abandonar la encuesta?")
-                        .setMessage("Se perderan los cambios realizados.")
+                        .setTitle("¿Esta seguro que desea eliminar la encuesta?")
+                        .setMessage("La encuesta no podra ser recuperada.")
                         .setNegativeButton("Cancelar", new DialogInterface.OnClickListener()
-                            {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-
-                                }
-                            })
-                        .setPositiveButton("Salir", new DialogInterface.OnClickListener()
                         {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
+
+                            }
+                        })
+                        .setPositiveButton("Eliminar", new DialogInterface.OnClickListener()
+                        {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                PollFileStorageHelper.deletePoll(poll);
+                                setResult(Activity.RESULT_OK);
                                 finish();
                             }
                         })
@@ -173,7 +172,6 @@ public class PollEditorActivity extends AppCompatActivity {
                 return true;
 
             case R.id.action_save_poll:
-
                 new AlertDialog.Builder(this)
                         .setIcon(android.R.drawable.ic_dialog_alert)
                         .setTitle("Confirmar")
@@ -204,6 +202,8 @@ public class PollEditorActivity extends AppCompatActivity {
     }
 
     public void savePoll(){
+        String uuid = UUID.randomUUID().toString().replace("-", "");
+        poll.setId(uuid);
         TextView titleView = findViewById(R.id.polltitle);
         TextView descriptionView = findViewById(R.id.polldescription);
         poll.setTitle(titleView.getText().toString());
@@ -270,9 +270,16 @@ public class PollEditorActivity extends AppCompatActivity {
     public void onBackPressed() {
         new AlertDialog.Builder(this)
                 .setIcon(android.R.drawable.ic_dialog_alert)
-                .setTitle("Encuesta incompleta")
-                .setMessage("¿Esta seguro que desea abandonar esta encuesta? Se perdera el progreso.")
-                .setPositiveButton("Abandonar", new DialogInterface.OnClickListener()
+                .setTitle("¿Esta seguro que desea abandonar la encuesta?")
+                .setMessage("Se perderan los cambios realizados.")
+                .setNegativeButton("Cancelar", new DialogInterface.OnClickListener()
+                {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                })
+                .setPositiveButton("Salir", new DialogInterface.OnClickListener()
                 {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -280,7 +287,6 @@ public class PollEditorActivity extends AppCompatActivity {
                         finish();
                     }
                 })
-                .setNegativeButton("Cancelar", null)
                 .show();
     }
 

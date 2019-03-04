@@ -19,7 +19,7 @@
 
         <activity
             android:name=".PollListActivity"
-            android:label="@string/title_activity_poll_list"
+            android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -39,7 +39,7 @@
             android:name=".QuestionEditorActivity"
             android:label="@string/title_activity_polygon" />
         <activity
-            android:name=".PollActivity"
+            android:name=".PollActiveActivity"
             android:label="@string/title_activity_polygon"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
@@ -61,6 +61,9 @@
         <activity
             android:name=".PointPlusActivity"
             android:label="@string/title_activity_route"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".PollDetailsActivity"
             android:theme="@style/AppTheme.NoActionBar" />
     </application>
 

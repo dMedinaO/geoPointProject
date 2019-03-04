@@ -52,7 +52,7 @@ public class MultipleChoiceActivity extends QuestionActivity{
         }
         // por defecto solo es posible seleccionar una opcion
         if (options.containsKey("max")){
-            maxSelected = (int) options.get("max");
+            maxSelected = Integer.valueOf(String.valueOf(options.get("max")));
             if (maxSelected < 1){
                 Toast.makeText(this, "El número de opciones seleccionables debe ser mayor a 1.", Toast.LENGTH_LONG).show();
                 return;
@@ -103,10 +103,16 @@ public class MultipleChoiceActivity extends QuestionActivity{
                 }
             }
             if (values != ""){
+                JSONObject response = new JSONObject();
                 values = values.substring(0, values.length() - 1);
                 values = "[" + values + "]";
-                intent.setData(Uri.parse(values));
-                setResult(Activity.RESULT_OK, intent);
+                try {
+                    response.put("value", values);
+                    intent.setData(Uri.parse(response.toString()));
+                    setResult(Activity.RESULT_OK, intent);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
             else{
                 setResult(Activity.RESULT_CANCELED, intent);
@@ -114,14 +120,19 @@ public class MultipleChoiceActivity extends QuestionActivity{
         }
         else{
             int idSelected = radioGroup.getCheckedRadioButtonId();
-            Log.d("LOG:D", String.valueOf(idSelected));
             if (idSelected == -1){
                 setResult(Activity.RESULT_CANCELED, intent);
             }
             else{
+                JSONObject response = new JSONObject();
                 String value = (String) ((RadioButton) findViewById(idSelected)).getContentDescription();
-                intent.setData(Uri.parse(value));
-                setResult(Activity.RESULT_OK, intent);
+                try {
+                    response.put("value", value);
+                    intent.setData(Uri.parse(response.toString()));
+                    setResult(Activity.RESULT_OK, intent);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
         }
         finish();

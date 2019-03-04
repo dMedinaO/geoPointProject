@@ -1,15 +1,16 @@
 package cl.esanhueza.map_david;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.AppCompatImageView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -22,10 +23,9 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import cl.esanhueza.map_david.models.Poll;
-import cl.esanhueza.map_david.models.Question;
+import cl.esanhueza.map_david.PollDetailsActivity;
 import cl.esanhueza.map_david.storage.PollFileStorageHelper;
 
 public class PollListActivity extends AppCompatActivity {
@@ -52,7 +52,7 @@ public class PollListActivity extends AppCompatActivity {
 
         listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+            public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
                 editPoll(list.get(position));
                 return true;
             }
@@ -75,9 +75,8 @@ public class PollListActivity extends AppCompatActivity {
 
         loadList();
     }
-
     public void openPoll(Poll poll){
-        Intent intent = new Intent(this, PollActivity.class);
+        Intent intent = new Intent(this, PollDetailsActivity.class);
         intent.putExtra("POLL", poll.toJson());
         startActivityForResult(intent, ANSWER_POLL);
     }
@@ -117,6 +116,8 @@ public class PollListActivity extends AppCompatActivity {
 
         }
     }
+
+
 
     public class PollAdapter extends ArrayAdapter<Poll> {
 

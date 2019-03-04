@@ -19,6 +19,9 @@ public class QuestionEditorFragment extends Fragment {
     public Map<String, Object> getOptions(){
         return null;
     }
+    public boolean validate(){
+        return true;
+    }
     public QuestionEditorFragment() {
         // Required empty public constructor
     }

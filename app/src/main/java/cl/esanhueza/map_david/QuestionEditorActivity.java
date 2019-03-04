@@ -119,6 +119,10 @@ public class QuestionEditorActivity extends AppCompatActivity implements BlankFr
     /* se ejecuta al presionar el boton flotante en el fragmento para editar la pregunta */
     public void saveQuestion(View view) {
         QuestionEditorFragment f = (QuestionEditorFragment) currentFragment;
+
+        if (!f.validate()){
+            return;
+        }
         Map<String, Object> editedMap = f.getOptions();
 
         question.setDescription(getQuestionDescription().getText().toString());
