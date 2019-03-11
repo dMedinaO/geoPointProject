@@ -9,6 +9,8 @@ import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.ParcelFileDescriptor;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -35,6 +37,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.w3c.dom.Text;
 
+import java.io.BufferedReader;
+import java.io.FileDescriptor;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -49,19 +56,24 @@ import cl.esanhueza.map_david.models.Question;
 import cl.esanhueza.map_david.storage.PollFileStorageHelper;
 
 
-public class PollEditorActivity extends AppCompatActivity {
-    static final public int NEW_QUESTION_CODE = 1;
-    static final public int EDIT_QUESTION_CODE = 1;
+public class PollEditorActivity extends CustomActivity {
+    static final public int NEW_QUESTION_CODE = 200;
+    static final public int EDIT_QUESTION_CODE = 100;
+    static final public int PICKFILE_REQUEST_CODE = 300;
     QuestionAdapter mAdapter;
     ListView listView;
     Context mContext;
     Poll poll = new Poll();
 
     static final public HashMap QUESTION_TYPE_LIST = new HashMap<String, String>(){{
-        put("choice", "Alternativa");
-        put("text", "Texto");
-        // put("polygon", "Poligono");
-        // put("route", "Ruta");
+        put("choice", "Selección múltiple");
+        put("text", "Ingresar texto");
+        put("route", "Dibujar ruta");
+        put("polygon", "Dibujar polígono");
+        put("range", "Ingresar número entre rango");
+        put("point", "Ingresar punto");
+        put("point+", "Seleccionar punto y pregunta");
+
         // put("point", "Puntos en mapa");
     }};
 
@@ -147,6 +159,9 @@ public class PollEditorActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case R.id.action_import_poll_file:
+                importPoll();
+                return true;
             case R.id.action_delete_poll:
                 new AlertDialog.Builder(this)
                         .setIcon(android.R.drawable.ic_dialog_alert)
@@ -215,18 +230,69 @@ public class PollEditorActivity extends AppCompatActivity {
 
         String result = PollFileStorageHelper.savePoll(poll);
         if (result != null){
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                MediaScannerConnection.scanFile(this, new String[]{result}, null, new MediaScannerConnection.OnScanCompletedListener() {
-                    public void onScanCompleted(String path, Uri uri) {
-                    }
-                });
-            } else {
-                this.sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED,
-                        Uri.parse("file://" + result)));
-            }
+            refreshStorage(result);
         }
         setResult(Activity.RESULT_OK);
         finish();
+    }
+
+    private void importPoll(){
+        Intent contentSelectionIntent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        contentSelectionIntent.setType("*/*");
+        contentSelectionIntent.addCategory(Intent.CATEGORY_OPENABLE);
+        startActivityForResult(contentSelectionIntent, PICKFILE_REQUEST_CODE);
+    }
+
+    private void loadImportedPoll(Uri uri){
+        try {
+
+            ParcelFileDescriptor parcelFileDescriptor =
+                    getContentResolver().openFileDescriptor(uri, "r");
+            FileDescriptor fileDescriptor = parcelFileDescriptor.getFileDescriptor();
+
+
+            StringBuilder stringBuilder = new StringBuilder();
+            String line = null;
+            BufferedReader br = null;
+
+            br = new BufferedReader(new FileReader(fileDescriptor));
+            while ((line = br.readLine()) != null) {
+                stringBuilder.append(line);
+            }
+
+            JSONObject pollJson = new JSONObject(stringBuilder.toString());
+
+            poll = new Poll(pollJson);
+
+            TextView titleView = findViewById(R.id.polltitle);
+            TextView descriptionView = findViewById(R.id.polldescription);
+            titleView.setText(poll.getTitle());
+            descriptionView.setText(poll.getDescription());
+
+            questionsList.clear();
+            questionsList.addAll(poll.getQuestions());
+            mAdapter.notifyDataSetChanged();
+        } catch (JSONException e) {
+            Toast.makeText(this, "JSON no valido.", Toast.LENGTH_SHORT);
+            e.printStackTrace();
+        } catch (FileNotFoundException e) {
+            Toast.makeText(this, "Archivo no encontrado.", Toast.LENGTH_SHORT);
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void refreshStorage(String result){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            MediaScannerConnection.scanFile(this, new String[]{result}, null, new MediaScannerConnection.OnScanCompletedListener() {
+                public void onScanCompleted(String path, Uri uri) {
+                }
+            });
+        } else {
+            this.sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED,
+                    Uri.parse("file://" + result)));
+        }
     }
 
     public void handleNewQuestion(View view){
@@ -235,6 +301,13 @@ public class PollEditorActivity extends AppCompatActivity {
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == PICKFILE_REQUEST_CODE){
+            if (resultCode == Activity.RESULT_OK){
+                Log.d("TST  ENCUESTAS: ", data.getData().getPath() );
+                loadImportedPoll(data.getData());
+            }
+            return;
+        }
         if (resultCode == Activity.RESULT_OK) {
             String returnedResult = data.getData().toString();
             Log.d("Result", "Pregunta contestada, respuesta: " + returnedResult);
@@ -288,16 +361,6 @@ public class PollEditorActivity extends AppCompatActivity {
                     }
                 })
                 .show();
-    }
-
-    private Question findQuestionByNumber(int n){
-        for (Question q : questionsList){
-            if (q.getNumber() == n){
-                Log.d("Test mob: ", "questionType " + q.getType());
-                return q;
-            }
-        }
-        return null;
     }
 
     @Override

@@ -14,7 +14,7 @@
 
         <TextView
             android:id="@+id/question_number"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:width="0dp"
@@ -25,7 +25,7 @@
 
         <TextView
             android:id="@+id/question_title"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="4"
             android:width="0dp"
@@ -35,7 +35,7 @@
 
         <ImageView
             android:id="@+id/question_state"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             app:srcCompat="@drawable/ic_check_box_outline_blank_black_24dp" />

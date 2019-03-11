@@ -7,10 +7,15 @@ import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
@@ -29,9 +34,7 @@ import java.util.List;
 public class RouteActivity extends QuestionActivity {
     MapView mMap;
     IMapController mMapController;
-    ArrayList<OverlayItem> mItems;
     DrawLineOverlay mPointsOverlay;
-    ItemizedOverlayWithFocus<OverlayItem> mDrawingOverlay;
 
     public void setContent(){
         mMap = (MapView) findViewById(R.id.map);
@@ -42,32 +45,50 @@ public class RouteActivity extends QuestionActivity {
 
         // initialize controller
         mMapController = mMap.getController();
-        // set zoom and start position
         mMapController.setZoom(13.0);
+
+        // set zoom and start position
+        if (question.getOptions().containsKey("zoom")){
+            mMapController.setZoom(Double.valueOf(question.getOptions().get("zoom").toString()));
+        }
+
         GeoPoint startPoint = new GeoPoint(-33.447487, -70.673676);
+        if(currentPosition != null){
+            startPoint = currentPosition;
+        }
+        else if (question.getOptions().containsKey("center")){
+            try {
+                JSONObject centerJson = new JSONObject(question.getOptions().get("center").toString());
+                startPoint.setLatitude(centerJson.getDouble("latitude"));
+                startPoint.setLongitude(centerJson.getDouble("longitude"));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        if (question.getOptions().containsKey("zoom")){
+            mMapController.setZoom(Double.valueOf(question.getOptions().get("zoom").toString()));
+        }
+
         mMapController.setCenter(startPoint);
 
-        // initialize array to store icons.
-        mItems = new ArrayList<OverlayItem>();
-
-        mItems.add(new OverlayItem("Title", "Description", new GeoPoint(-33.447487, -70.673676)));
-
-        mDrawingOverlay = new ItemizedOverlayWithFocus<OverlayItem>(this, mItems,
-                new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
-                    @Override
-                    public boolean onItemSingleTapUp(final int index, final OverlayItem item) {
-                        //do something
-                        return true;
-                    }
-                    @Override
-                    public boolean onItemLongPress(final int index, final OverlayItem item) {
-                        return false;
-                    }
-                });
-
-        //mLineOverlay = new DrawLineOverlay(mMap);
         mPointsOverlay = new DrawLineOverlay(mMap);
         mMap.getOverlays().add(mPointsOverlay);
+
+
+        if(response != null){
+            try {
+                JSONArray array = response.getJSONArray("value");
+                for (int i=0; i<array.length(); i++){
+                    JSONObject obj = array.getJSONObject(i);
+                    GeoPoint p = new GeoPoint(obj.getDouble("latitude"), obj.getDouble("longitude"));
+                    mPointsOverlay.addPoint(p, mMap);
+                }
+                mMap.invalidate();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public int getContentViewId(){
@@ -86,16 +107,26 @@ public class RouteActivity extends QuestionActivity {
             return;
         }
 
-        String text = "";
+        JSONArray array = new JSONArray();
+
         for (GeoPoint p : points){
-            text += "{ \"latitude\":" + String.valueOf(p.getLatitude());
-            text += ", \"longitude\":" + String.valueOf(p.getLongitude()) + "},";
+            JSONObject obj = new JSONObject();
+            try {
+                obj.put("latitude", p.getLatitude());
+                obj.put("longitude", p.getLongitude());
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            array.put(obj);
         }
-        if (points.size() > 0){
-            text = text.substring(0, text.length()-1);
+
+        JSONObject response = new JSONObject();
+        try {
+            response.put("value", array);
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
-        text = "[" + text + "]";
-        intent.setData(Uri.parse(text));
+        intent.setData(Uri.parse(response.toString()));
         setResult(Activity.RESULT_OK, intent);
         finish();
     }
@@ -111,7 +142,6 @@ public class RouteActivity extends QuestionActivity {
     }
 
     class DrawLineOverlay extends MyLocationNewOverlay{
-        List<GeoPoint> points = new ArrayList<>();
         Polyline figure;
 
 
@@ -124,8 +154,12 @@ public class RouteActivity extends QuestionActivity {
         }
 
         public void cleanPoints(MapView map){
-            figure.getPoints().clear();
+            figure.setPoints(new ArrayList<GeoPoint>());
             map.invalidate();
+        }
+
+        public void addPoint(GeoPoint pos, MapView map){
+            figure.addPoint(pos);
         }
 
         @Override

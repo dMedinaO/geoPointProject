@@ -2,9 +2,15 @@ package cl.esanhueza.map_david;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.util.Base64;
+import android.util.Log;
 import android.view.View;
+import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONException;
@@ -24,9 +30,38 @@ public class TextActivity extends QuestionActivity{
         edit.getEditableText().clear();
     }
 
+    public boolean validate(){
+        String error = "";
+        TextView textView = findViewById(R.id.editText);
+        if (textView.getText().toString().equals("")){
+            error = "Debe ingresar la respuesta.";
+        }
+
+        if (!error.equals("")){
+            Toast.makeText(this, error, Toast.LENGTH_LONG).show();
+            return false;
+        }
+        return true;
+    }
+
     @Override
     public void setContent() {
+        if(response != null){
+            EditText edit = (EditText) findViewById(R.id.editText);
+            try {
 
+                edit.getEditableText().clear();
+                edit.getEditableText().append(response.getString("value"));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        if (question.getOptions().containsKey("image")){
+            ImageView imageView = findViewById(R.id.questionimage);
+            byte[] decodedImageBytes = Base64.decode(question.getOptions().get("image").toString(), Base64.DEFAULT);
+            imageView.setImageBitmap(BitmapFactory.decodeByteArray(decodedImageBytes, 0, decodedImageBytes.length));
+            imageView.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override

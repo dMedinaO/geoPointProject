@@ -1,7 +1,10 @@
 package cl.esanhueza.map_david.storage;
 
+import android.content.Context;
 import android.media.MediaScannerConnection;
+import android.net.Uri;
 import android.os.Environment;
+import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -10,11 +13,11 @@ import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.nio.CharBuffer;
 import java.util.ArrayList;
 
 import cl.esanhueza.map_david.models.Poll;
@@ -67,59 +70,74 @@ public class PollFileStorageHelper {
         File folder = PollFileStorageHelper.getPublicPollStorageDir();
         String title = poll.getTitle().replaceAll(" ", "_");
         File file = new File(folder.getAbsolutePath(),  title + "_" + poll.getId() + ".json");
-        Log.d("TST RESULT: ", file.getAbsolutePath());
-        Log.d("TST RESULT Exists: ", String.valueOf(file.exists()));
         boolean result = file.delete();
-        Log.d("TST RESULT: ", String.valueOf(result));
         return result;
     }
 
-    static final public String saveResponses(Poll poll, JSONArray array){
+    static final private boolean writeResponses(File file, Poll poll, JSONArray array){
+        FileWriter writer = null;
         try {
-            File folder = PollFileStorageHelper.getPublicResponsesStorageDir();
-            String title = poll.getTitle();
-            title.replaceAll(" ", "_");
-            File file = new File(folder.getAbsolutePath(),  title + "_" + poll.getId() + ".json");
-            if (!file.exists()){
-                file.createNewFile();
-                FileWriter writer = new FileWriter(file);
-                writer.append("{\n");
-                writer.append("idEncuesta: " + poll.getId() + ",\n");
-                writer.append("respuestas: [\n" );
-                for(int i=0; i<array.length(); i++){
-                    JSONObject obj = array.getJSONObject(i);
-                    writer.append(obj.toString() + ",\n");
-                }
-                writer.append("]}");
-                writer.close();
 
+            writer = new FileWriter(file);
+            writer.append("{\n");
+            writer.append("\"idEncuesta\":  \"" + poll.getId() + "\",\n");
+            writer.append("\"respuestas\": [\n" );
+            for(int i=0; i<array.length(); i++){
+                JSONObject obj = array.getJSONObject(i);
+                writer.append(obj.toString() + ",\n");
             }
-            else{
-                Log.e(LOG_TAG, "Archivo json de respuestas ya existe. Se agregaran las respuestas.");
-                RandomAccessFile f = new RandomAccessFile(file.getAbsolutePath(), "rw");
-                long length = f.length() - 1;
-                byte b = 0;
-                do {
-                    length -= 1;
-                    f.seek(length);
-                    b = f.readByte();
-                } while(b != 10);
-                f.setLength(length+1);
-                for(int i=0; i<array.length(); i++){
-                    JSONObject obj = array.getJSONObject(i);
-                    f.writeChars(obj.toString() + ",\n");
-                }
-                f.writeChars("}]");
-                f.close();
-            }
-
-            return file.getAbsolutePath();
+            writer.append("]}");
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return true;
+    }
+
+    static final public String saveResponses(Context context, Uri uriDestination, Poll poll, JSONArray array){
+        Log.d("TST ENCUESATAS: ", array.toString());
+        try {
+            ParcelFileDescriptor pfd = context.getContentResolver().openFileDescriptor(uriDestination, "w");
+            FileOutputStream fos = new FileOutputStream(pfd.getFileDescriptor());
+            JSONObject obj = new JSONObject();
+
+            obj.put("idEncuesta", poll.getId());
+            obj.put("respuestas", array);
+
+            fos.write(obj.toString(2).getBytes());
+            fos.close();
+            pfd.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return "hy";
+        /*
+        File file = new File(destinationFilePath);
+        Log.d("SAVE RESPONSES", destinationFilePath);
+        try {
+            boolean created = file.createNewFile();
+            Log.d("CREATED: ", String.valueOf(created));
+
+            FileOutputStream fos = new FileOutputStream(file);
+            fos.write("hello world".getBytes());
+            fos.close();
+        } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return null;
+
+        //writeResponses(file, poll, array);
+        return file.getAbsolutePath();
+        */
     }
 
     static final public String savePoll(Poll poll){
@@ -132,9 +150,8 @@ public class PollFileStorageHelper {
             if (!file.exists()){
                 file.createNewFile();
                 FileWriter writer = new FileWriter(file);
-                writer.append(json.toString());
+                writer.append(json.toString(2));
                 writer.close();
-
             }
             else{
                 Log.e(LOG_TAG, "Archivo json ya existe.");

@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -33,7 +34,7 @@ import cl.esanhueza.map_david.models.Poll;
 import cl.esanhueza.map_david.PollDetailsActivity;
 import cl.esanhueza.map_david.storage.PollFileStorageHelper;
 
-public class PollListActivity extends AppCompatActivity {
+public class PollListActivity extends CustomActivity {
     static final int EDIT_POLL = 300;
     static final int ANSWER_POLL = 400;
     static final int CREATE_POLL = 500;

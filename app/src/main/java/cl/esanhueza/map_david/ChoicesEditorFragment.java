@@ -1,16 +1,15 @@
 package cl.esanhueza.map_david;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.text.Editable;
-import android.text.TextWatcher;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,21 +17,19 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import cl.esanhueza.map_david.models.Choice;
-import cl.esanhueza.map_david.storage.PollFileStorageHelper;
 
 
 /**
@@ -46,8 +43,6 @@ import cl.esanhueza.map_david.storage.PollFileStorageHelper;
 public class ChoicesEditorFragment extends QuestionEditorFragment {
     private ListView listView;
     private ChoiceAdapter mAdapter;
-    private ArrayList<Choice> choicesList = new ArrayList<Choice>();
-    private OnFragmentInteractionListener mListener;
 
     @Override
     public boolean validate(){
@@ -79,6 +74,7 @@ public class ChoicesEditorFragment extends QuestionEditorFragment {
     }
 
     public Map<String, Object> getOptions(){
+        mAdapter.saveEdit();
         mAdapter.notifyDataSetChanged();
         Map<String, Object> map = new HashMap<String, Object>();
         JSONArray alternativesArray = new JSONArray();
@@ -106,15 +102,8 @@ public class ChoicesEditorFragment extends QuestionEditorFragment {
     }
 
     public void addChoice(){
-        choicesList.clear();
-        for (int i=0; i<mAdapter.getCount(); i++){
-            TextView valueView = listView.findViewWithTag("value" + String.valueOf(i));
-            TextView labelView = listView.findViewWithTag("label" + String.valueOf(i));
-            choicesList.add(new Choice(valueView.getText().toString(), labelView.getText().toString()));
-        }
-        mAdapter.clear();
-        choicesList.add(new Choice("Valor", "Texto" + String.valueOf(choicesList.size())));
-        mAdapter.addAll(choicesList);
+        mAdapter.saveEdit();
+        mAdapter.add(new Choice("Valor", "Texto" + String.valueOf(mAdapter.getCount())));
     }
 
     /**
@@ -135,8 +124,12 @@ public class ChoicesEditorFragment extends QuestionEditorFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mAdapter = new ChoiceAdapter(getContext(), new ArrayList<Choice>(choicesList));
+        mAdapter = new ChoiceAdapter(getContext(), new ArrayList<Choice>());
+    }
 
+    @Override
+    public void updateQuestionContent(View view){
+        super.updateQuestionContent(view);
         JSONArray alternativesArray = null;
         if (options.containsKey("alternatives")){
             alternativesArray = (JSONArray) options.get("alternatives");
@@ -174,45 +167,18 @@ public class ChoicesEditorFragment extends QuestionEditorFragment {
                 addChoice();
             }
         });
+        updateQuestionContent(view);
         return view;
-    }
-
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
     }
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        mListener = null;
-    }
-
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
     }
 
     public class ChoiceAdapter extends ArrayAdapter<Choice> {
@@ -225,10 +191,26 @@ public class ChoicesEditorFragment extends QuestionEditorFragment {
             itemList = list;
         }
 
+        @Override
+        public void remove(Choice choice){
+            saveEdit();
+            super.remove(choice);
+        }
+
+        public void saveEdit(){
+            for (int i=0; i<this.getCount(); i++){
+                TextView label = listView.findViewWithTag("label" + String.valueOf(i));
+                this.getItem(i).setLabel(label.getText().toString());
+
+                TextView value = listView.findViewWithTag("value" + String.valueOf(i));
+                this.getItem(i).setValue(value.getText().toString());
+
+            }
+        }
+
         @NonNull
         @Override
         public View getView(final int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-            Log.d("TST ENCUESTAS: ", choicesList.get(position).toString());
             View listItem = convertView;
             if(listItem == null)
                 listItem = LayoutInflater.from(mContext).inflate(R.layout.listview_choice_item, parent,false);
@@ -246,12 +228,11 @@ public class ChoicesEditorFragment extends QuestionEditorFragment {
             labelView.setTag("label" + String.valueOf(position));
             labelView.setText(currentChoice.getLabel());
 
+
             ImageButton removeBtn = (ImageButton) listItem.findViewById(R.id.btn_remove_choice);
             removeBtn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Log.d("TST ENCUESTAS: ", "Position: " + String.valueOf(position));
-                    Log.d("TST ENCUESTAS: ", "Eliminando: " + currentChoice.toString());
                     remove(currentChoice);
                     notifyDataSetChanged();
                 }

@@ -28,40 +28,6 @@
 
         </android.support.design.widget.AppBarLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:weightSum="3">
-
-            <TextView
-                android:id="@+id/textView3"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:width="0dp"
-                android:text="Posicion: " />
-
-            <TextView
-                android:id="@+id/position"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="2"
-                android:width="0dp"
-                android:text=" " />
-        </LinearLayout>
-
-
-        <TextView
-            android:id="@+id/polldescription"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="4dp"
-            android:layout_marginLeft="5dp"
-            android:layout_marginRight="5dp"
-            android:layout_marginTop="4dp"
-            android:text="TextView"
-            android:textAppearance="@android:style/TextAppearance.Material.Medium" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -76,6 +42,7 @@
                 android:layout_height="match_parent">
 
             </ListView>
+
         </LinearLayout>
 
     </LinearLayout>

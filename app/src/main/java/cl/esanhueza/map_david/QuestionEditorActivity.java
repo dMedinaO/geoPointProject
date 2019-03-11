@@ -10,7 +10,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
-import android.text.method.SingleLineTransformationMethod;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -28,7 +27,7 @@ import java.util.Set;
 
 import cl.esanhueza.map_david.models.Question;
 
-public class QuestionEditorActivity extends AppCompatActivity implements BlankFragment.OnFragmentInteractionListener, ChoicesEditorFragment.OnFragmentInteractionListener{
+public class QuestionEditorActivity extends AppCompatActivity{
     Question question;
     ArrayList<String> types = new ArrayList<>();
     ArrayList<String> keys = new ArrayList<>();
@@ -106,6 +105,20 @@ public class QuestionEditorActivity extends AppCompatActivity implements BlankFr
             case "choice":
                 currentFragment = new ChoicesEditorFragment();
                 break;
+            case "text":
+                currentFragment = new TextEditorFragment();
+                break;
+            case "range":
+                currentFragment = new RangeEditorFragment();
+                break;
+            case "route":
+            case "polygon":
+            case "point":
+                currentFragment = new RouteEditorFragment();
+                break;
+            case "point+":
+                currentFragment = new PointPlusEditorFragment();
+                break;
             default:
                 currentFragment = new BlankFragment();
                 break;
@@ -150,8 +163,6 @@ public class QuestionEditorActivity extends AppCompatActivity implements BlankFr
         descriptionView.setText(String.valueOf(question.getDescription()));
 
         Spinner typeSpinner = (Spinner) findViewById(R.id.spinner_question_type);
-        Log.i("TST ENCUESTA:", String.valueOf(question.getType()));
-        Log.i("TST ENCUESTA: ", types.toString());
         typeSpinner.setSelection(keys.indexOf(question.getType()));
     }
 
@@ -169,10 +180,5 @@ public class QuestionEditorActivity extends AppCompatActivity implements BlankFr
 
     public TextView getQuestionDescription(){
         return (TextView) findViewById(R.id.textview_question_description);
-    }
-
-    @Override
-    public void onFragmentInteraction(Uri uri) {
-
     }
 }

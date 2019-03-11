@@ -9,6 +9,9 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
@@ -32,7 +35,6 @@ public class PolygonActivity extends QuestionActivity {
     ArrayList<OverlayItem> mItems;
     DrawPolygonOverlay mPointsOverlay;
     ItemizedOverlayWithFocus<OverlayItem> mDrawingOverlay;
-    Question question;
 
     public void setContent(){
         mMap = (MapView) findViewById(R.id.map);
@@ -45,7 +47,28 @@ public class PolygonActivity extends QuestionActivity {
         mMapController = mMap.getController();
         // set zoom and start position
         mMapController.setZoom(13.0);
+
+        // set zoom and start position
         GeoPoint startPoint = new GeoPoint(-33.447487, -70.673676);
+
+
+        if(currentPosition != null){
+            startPoint = currentPosition;
+        }
+        else if (question.getOptions().containsKey("center")){
+            try {
+                JSONObject centerJson = new JSONObject(question.getOptions().get("center").toString());
+                startPoint.setLatitude(centerJson.getDouble("latitude"));
+                startPoint.setLongitude(centerJson.getDouble("longitude"));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        if (question.getOptions().containsKey("zoom")){
+            mMapController.setZoom(Double.valueOf(question.getOptions().get("zoom").toString()));
+        }
+
         mMapController.setCenter(startPoint);
 
         // initialize array to store icons.
@@ -68,8 +91,19 @@ public class PolygonActivity extends QuestionActivity {
 
         mPointsOverlay = new DrawPolygonOverlay(mMap);
         mMap.getOverlays().add(mPointsOverlay);
-        if (currentPosition != null){
-            mMap.getController().setCenter(currentPosition);
+
+        if(response != null){
+            try {
+                JSONArray array = response.getJSONArray("value");
+                for (int i=0; i<array.length(); i++){
+                    JSONObject obj = array.getJSONObject(i);
+                    GeoPoint p = new GeoPoint(obj.getDouble("latitude"), obj.getDouble("longitude"));
+                    mPointsOverlay.addPoint(p, mMap);
+                }
+                mMap.invalidate();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -90,16 +124,25 @@ public class PolygonActivity extends QuestionActivity {
             return;
         }
 
-        String text = "";
+        JSONArray array = new JSONArray();
         for (GeoPoint p : points){
-            text += "{ \"latitude\":" + String.valueOf(p.getLatitude());
-            text += ", \"longitude\":" + String.valueOf(p.getLongitude()) + "},";
+            JSONObject obj = new JSONObject();
+            try {
+                obj.put("latitude", p.getLatitude());
+                obj.put("longitude", p.getLongitude());
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            array.put(obj);
         }
-        if (points.size() > 0){
-            text = text.substring(0, text.length()-1);
+
+        JSONObject response = new JSONObject();
+        try {
+            response.put("value", array);
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
-        text = "[" + text + "]";
-        intent.setData(Uri.parse(text));
+        intent.setData(Uri.parse(response.toString()));
         setResult(Activity.RESULT_OK, intent);
         finish();
     }
@@ -122,32 +165,8 @@ public class PolygonActivity extends QuestionActivity {
         mMap.onPause();  //needed for compass, my location overlays, v6.0.0 and up
     }
 
-    class DrawLineOverlay extends MyLocationNewOverlay{
-        List<GeoPoint> points = new ArrayList<>();
-        Polyline line;
-
-
-        public DrawLineOverlay (MapView mapView) {
-            super(mapView);
-            line = new Polyline();
-            line.getPaint().setARGB(200, 63,81,181);
-            line.getPaint().setStrokeCap(Paint.Cap.ROUND);
-            mapView.getOverlayManager().add(line);
-        }
-
-        @Override
-        public boolean onDoubleTap(MotionEvent e, MapView map) {
-            Projection projection = map.getProjection();
-            GeoPoint geoPoint = (GeoPoint) projection.fromPixels((int)e.getX(), (int)e.getY());
-            line.addPoint(geoPoint);
-            map.invalidate();
-            return true;
-        }
-    }
-
     class DrawPolygonOverlay extends MyLocationNewOverlay{
         Polygon figure;
-
 
         public DrawPolygonOverlay (MapView mapView) {
             super(mapView);
@@ -156,6 +175,10 @@ public class PolygonActivity extends QuestionActivity {
 
             //polygon.setStrokeCap(Paint.Cap.ROUND);
             mapView.getOverlayManager().add(figure);
+        }
+
+        public void addPoint(GeoPoint pos, MapView map){
+            figure.addPoint(pos);
         }
 
         @Override
@@ -168,7 +191,7 @@ public class PolygonActivity extends QuestionActivity {
         }
 
         public void cleanPoints(MapView map){
-            figure.getPoints().clear();
+            figure.setPoints(new ArrayList<GeoPoint>());
             map.invalidate();
         }
 

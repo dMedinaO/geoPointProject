@@ -1,6 +1,8 @@
 package cl.esanhueza.map_david;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
@@ -21,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 public class MultipleChoiceActivity extends QuestionActivity{
     int maxSelected = 1;
@@ -61,17 +64,28 @@ public class MultipleChoiceActivity extends QuestionActivity{
         JSONArray jsonArray = (JSONArray) options.get("alternatives");
         LinearLayout linearLayout = (LinearLayout) findViewById(R.id.questions);
         if (maxSelected > 1){
-            for (int i=0; i<jsonArray.length(); i++){
-                try {
+            try {
+                for (int i=0; i<jsonArray.length(); i++){
+                    ArrayList selectedList = new ArrayList();
+                    if (response != null){
+                        JSONArray selected = response.getJSONArray("value");
+                        for (int j=0; j<selected.length();j++){
+                            selectedList.add(selected.get(j));
+                        }
+                    }
+                    Log.d("TST ENCUESTAS:", selectedList.toString());
                     JSONObject alt = jsonArray.getJSONObject(i);
                     CheckBox box = new CheckBox(getApplicationContext());
                     box.setText(alt.getString("label"));
                     box.setContentDescription(alt.getString("value"));
+
+                    box.setChecked(selectedList.contains(alt.getString("value")));
                     boxes.add(box);
                     linearLayout.addView(box);
-                } catch (JSONException e) {
-                    e.printStackTrace();
+
                 }
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
         }
         else{
@@ -79,10 +93,17 @@ public class MultipleChoiceActivity extends QuestionActivity{
             linearLayout.addView(radioGroup);
             for (int i=0; i<jsonArray.length(); i++){
                 try {
+                    String selected = null;
+                    if (response != null){
+                        selected = response.getString("value");
+                    }
                     JSONObject alt = jsonArray.getJSONObject(i);
                     RadioButton btn = new RadioButton(getApplicationContext());
+                    btn.setId(View.generateViewId());
                     btn.setText(alt.getString("label"));
                     btn.setContentDescription(alt.getString("value"));
+
+                    btn.setChecked(alt.getString("value").equals(selected));
                     radioGroup.addView(btn);
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -91,32 +112,57 @@ public class MultipleChoiceActivity extends QuestionActivity{
         }
     }
 
+    public boolean validate(){
+        String error = "";
+        if (maxSelected > 1){
+            int checkedCount = 0;
+            for (CheckBox box : boxes) {
+                if (box.isChecked()) {
+                    checkedCount++;
+                }
+            }
+            if(checkedCount == 0){
+                error = "Debe seleccionar una opción";
+            }
+            if (checkedCount > maxSelected){
+                error = "Solo puede seleccionar hasta " + String.valueOf(maxSelected) + " opciones.";
+            }
+        }
+        else{
+            int idSelected = radioGroup.getCheckedRadioButtonId();
+            if (idSelected == -1){
+                error = "Debe seleccionar una opción.";
+            }
+
+        }
+
+        if (!error.equals("")){
+            Toast.makeText(this, error, Toast.LENGTH_LONG).show();
+            return false;
+        }
+        return true;
+    }
+
     @Override
     public void saveResponse(View view) {
+        if (!validate()){ return; }
         Intent intent = new Intent();
 
         if (maxSelected > 1){
-            String values = "";
+            JSONArray arrayResponses = new JSONArray();
             for (CheckBox box : boxes) {
                 if (box.isChecked()) {
-                    values = values + box.getContentDescription() + ",";
+                    arrayResponses.put(box.getContentDescription());
                 }
             }
-            if (values != ""){
-                JSONObject response = new JSONObject();
-                values = values.substring(0, values.length() - 1);
-                values = "[" + values + "]";
-                try {
-                    response.put("value", values);
-                    intent.setData(Uri.parse(response.toString()));
-                    setResult(Activity.RESULT_OK, intent);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+            JSONObject response = new JSONObject();
+            try {
+                response.put("value", arrayResponses);
+                intent.setData(Uri.parse(response.toString()));
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
-            else{
-                setResult(Activity.RESULT_CANCELED, intent);
-            }
+            setResult(Activity.RESULT_OK, intent);
         }
         else{
             int idSelected = radioGroup.getCheckedRadioButtonId();

@@ -40,7 +40,6 @@
             android:label="@string/title_activity_polygon" />
         <activity
             android:name=".PollActiveActivity"
-            android:label="@string/title_activity_polygon"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".RouteActivity"
@@ -52,6 +51,10 @@
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".MultipleChoiceActivity"
+            android:label="@string/title_activity_route"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".RangeActivity"
             android:label="@string/title_activity_route"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity

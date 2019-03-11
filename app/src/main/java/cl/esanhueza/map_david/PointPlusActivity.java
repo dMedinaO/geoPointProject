@@ -131,6 +131,9 @@ public class PointPlusActivity extends QuestionActivity {
         java.lang.Class activity = (Class) PollActiveActivity.QUESTION_TYPE_LIST.get(q.getType());
         Intent intent = new Intent(this, activity);
         intent.putExtra("QUESTION", q.toJson());
+        if (response != null){
+            intent.putExtra("RESPONSE", response);
+        }
         startActivityForResult(intent, q.getNumber());
     }
 

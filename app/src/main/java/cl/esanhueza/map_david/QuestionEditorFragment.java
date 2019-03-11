@@ -39,4 +39,7 @@ public class QuestionEditorFragment extends Fragment {
     public void setOptions(Map<String, Object> options){
         this.options = options;
     }
+
+    public void updateQuestionContent(View view){
+    }
 }

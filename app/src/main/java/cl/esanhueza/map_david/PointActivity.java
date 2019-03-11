@@ -11,6 +11,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
@@ -43,9 +45,27 @@ public class PointActivity extends QuestionActivity {
 
         // initialize controller
         mMapController = mMap.getController();
+
         // set zoom and start position
         mMapController.setZoom(13.0);
+
         GeoPoint startPoint = new GeoPoint(-33.447487, -70.673676);
+        if(currentPosition != null){
+            startPoint = currentPosition;
+        }
+        else if (question.getOptions().containsKey("center")){
+            try {
+                JSONObject centerJson = new JSONObject(question.getOptions().get("center").toString());
+                startPoint.setLatitude(centerJson.getDouble("latitude"));
+                startPoint.setLongitude(centerJson.getDouble("longitude"));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        if (question.getOptions().containsKey("zoom")){
+            mMapController.setZoom(Double.valueOf(question.getOptions().get("zoom").toString()));
+        }
+
         mMapController.setCenter(startPoint);
 
         // initialize array to store icons.
@@ -69,6 +89,18 @@ public class PointActivity extends QuestionActivity {
         //mLineOverlay = new DrawLineOverlay(mMap);
         mPointsOverlay = new DrawPointOverlay(mMap);
         mMap.getOverlays().add(mPointsOverlay);
+
+        if(response != null){
+            try {
+                JSONObject obj = response.getJSONObject("value");
+                GeoPoint p = new GeoPoint(obj.getDouble("latitude"), obj.getDouble("longitude"));
+                mPointsOverlay.figure.setPosition(p);
+                mPointsOverlay.figure.setVisible(true);
+                mPointsOverlay.figure.setEnabled(true);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public int getContentViewId(){

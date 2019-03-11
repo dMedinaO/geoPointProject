@@ -14,6 +14,10 @@ public final class PersonContract {
         public static final String COLUMN_NAME_PERSON_ID = "person";
         public static final String COLUMN_NAME_POLL_ID = "poll";
         public static final String COLUMN_NAME_DATE = "date";
+        public static final String COLUMN_NAME_DATE_COMPLETED = "date_completed";
+        public static final String COLUMN_NAME_LATITUDE= "latitude";
+        public static final String COLUMN_NAME_LONGITUDE= "longitude";
+        public static final String COLUMN_NAME_COMPLETED= "completed";
     }
 
     public static final String SQL_CREATE_ENTRIES =
@@ -21,7 +25,11 @@ public final class PersonContract {
                     PersonEntry._ID + " INTEGER PRIMARY KEY," +
                     PersonEntry.COLUMN_NAME_PERSON_ID + " TEXT," +
                     PersonEntry.COLUMN_NAME_POLL_ID + " TEXT," +
-                    PersonEntry.COLUMN_NAME_DATE + " TEXT)";
+                    PersonEntry.COLUMN_NAME_LATITUDE+ " TEXT," +
+                    PersonEntry.COLUMN_NAME_LONGITUDE + " TEXT," +
+                    PersonEntry.COLUMN_NAME_COMPLETED + " INTEGER," +
+                    PersonEntry.COLUMN_NAME_DATE + " TEXT,"+
+                    PersonEntry.COLUMN_NAME_DATE_COMPLETED + " TEXT)";
 
     public static final String SQL_DELETE_ENTRIES =
             "DROP TABLE IF EXISTS " + PersonEntry.TABLE_NAME;

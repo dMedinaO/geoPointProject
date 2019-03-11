@@ -25,9 +25,10 @@ import org.osmdroid.util.GeoPoint;
 
 import cl.esanhueza.map_david.models.Question;
 
-public abstract class QuestionActivity extends AppCompatActivity {
+public abstract class QuestionActivity extends CustomActivity {
     int contentView;
     Question question;
+    JSONObject response = null;
     static final int PERMISSION_REQUEST = 100;
     public GeoPoint currentPosition;
 
@@ -59,6 +60,14 @@ public abstract class QuestionActivity extends AppCompatActivity {
         if (question == null) {
             setResult(Activity.RESULT_CANCELED);
             finish();
+        }
+
+        if (intent.hasExtra("RESPONSE")){
+            try {
+                response = new JSONObject(intent.getStringExtra("RESPONSE"));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
 
         ((TextView) findViewById(R.id.questiontitle)).setText(question.getTitle());

@@ -174,5 +174,8 @@ public class Question {
         this.state = state;
     }
 
+    public void setOptions(Map<String, Object> options) {
+        this.options = options;
+    }
 
 }

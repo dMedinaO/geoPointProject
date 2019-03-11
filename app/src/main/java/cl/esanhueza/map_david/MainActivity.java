@@ -3,10 +3,12 @@ package cl.esanhueza.map_david;
 import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.provider.BaseColumns;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
@@ -15,7 +17,7 @@ import org.osmdroid.config.Configuration;
 import cl.esanhueza.map_david.storage.ResponseContract;
 import cl.esanhueza.map_david.storage.ResponseDbHelper;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends CustomActivity {
     ResponseDbHelper mDbHelper;
     String POLL_ID = "0";
     int pollsCompleted = 0;
@@ -31,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
 
         mDbHelper = new ResponseDbHelper(getApplicationContext());
         updateResponsesCount();
+
     }
 
     public void startPoll(View view){
