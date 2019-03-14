@@ -3,24 +3,39 @@ package cl.esanhueza.map_david;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.osmdroid.config.Configuration;
+
+import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
@@ -28,9 +43,12 @@ import java.util.Set;
 import cl.esanhueza.map_david.models.Question;
 
 public class QuestionEditorActivity extends AppCompatActivity{
+    final static int PICKFILE_REQUEST_CODE = 9999;
     Question question;
     ArrayList<String> types = new ArrayList<>();
     ArrayList<String> keys = new ArrayList<>();
+    private String uriImage;
+    ImageView imageView;
 
     boolean updatingQuestion = false;
     QuestionEditorFragment currentFragment;
@@ -89,6 +107,16 @@ public class QuestionEditorActivity extends AppCompatActivity{
             @Override
             public void onNothingSelected(AdapterView<?> parent){}
         });
+
+        ImageButton btn = findViewById(R.id.btn_attach_image);
+
+        imageView = findViewById(R.id.image_attached);
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                attachImage();
+            }
+        });
     }
 
     // cambia el fragmento del formulario, dependiendo del tipo de pregunta
@@ -129,6 +157,23 @@ public class QuestionEditorActivity extends AppCompatActivity{
         fragmentTransaction.commit();
     }
 
+    private void attachImage(){
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        intent.setType("image/*");
+        startActivityForResult(intent, PICKFILE_REQUEST_CODE);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == PICKFILE_REQUEST_CODE){
+            if (resultCode == Activity.RESULT_OK){
+                uriImage = data.getData().toString();
+                imageView.setImageURI(Uri.parse(uriImage));
+                imageView.setVisibility(View.VISIBLE);
+            }
+        }
+    }
+
     /* se ejecuta al presionar el boton flotante en el fragmento para editar la pregunta */
     public void saveQuestion(View view) {
         QuestionEditorFragment f = (QuestionEditorFragment) currentFragment;
@@ -146,8 +191,11 @@ public class QuestionEditorActivity extends AppCompatActivity{
                 question.putOption(key, editedMap.get(key));
             }
         }
+        if (uriImage != null){
+            question.putOption("image", encodeImage(uriImage));
+        }
 
-        Log.d("TEST ENCUESTA: ", question.toJson());
+
         Intent intent = new Intent();
         intent.setData(Uri.parse(question.toJson()));
         setResult(Activity.RESULT_OK, intent);
@@ -164,6 +212,18 @@ public class QuestionEditorActivity extends AppCompatActivity{
 
         Spinner typeSpinner = (Spinner) findViewById(R.id.spinner_question_type);
         typeSpinner.setSelection(keys.indexOf(question.getType()));
+
+        if(uriImage != null){
+            imageView.setImageURI(Uri.parse(uriImage));
+        }
+        else{
+            if (question.getOptions().containsKey("image")){
+                imageView = findViewById(R.id.image_attached);
+                byte[] decodedImageBytes = Base64.decode(question.getOptions().get("image").toString(), Base64.DEFAULT);
+                imageView.setImageBitmap(BitmapFactory.decodeByteArray(decodedImageBytes, 0, decodedImageBytes.length));
+                imageView.setVisibility(View.VISIBLE);
+            }
+        }
     }
 
     @Override
@@ -180,5 +240,29 @@ public class QuestionEditorActivity extends AppCompatActivity{
 
     public TextView getQuestionDescription(){
         return (TextView) findViewById(R.id.textview_question_description);
+    }
+
+    private String encodeImage(String uriString){
+        InputStream inputStream = null;//You can get an inputStream using any IO API
+        try {
+            inputStream = new FileInputStream(getApplicationContext().getContentResolver().openFileDescriptor(Uri.parse(uriString), "r").getFileDescriptor());
+            byte[] bytes;
+            byte[] buffer = new byte[8192];
+            int bytesRead;
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            try {
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    output.write(buffer, 0, bytesRead);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            bytes = output.toByteArray();
+            return Base64.encodeToString(bytes, Base64.DEFAULT);
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

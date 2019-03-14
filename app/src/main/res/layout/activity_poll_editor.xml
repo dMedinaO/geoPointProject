@@ -19,11 +19,11 @@
 
             <android.support.v7.widget.Toolbar
                 android:id="@+id/poll_toolbar"
-                style="@style/Widget.AppCompat.ActionBar"
+                style="@style/Widget.AppCompat.Light.ActionBar"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
-                android:background="?attr/colorPrimary"
                 android:elevation="4dp"
+                android:foregroundTint="@android:color/background_light"
                 app:titleTextColor="@android:color/white" />
 
         </android.support.design.widget.AppBarLayout>

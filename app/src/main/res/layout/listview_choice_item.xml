@@ -12,7 +12,7 @@
         android:orientation="horizontal"
         android:weightSum="7">
 
-        <TextView
+        <EditText
             android:id="@+id/choice_number"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"

@@ -6,7 +6,7 @@
     <item
         android:id="@+id/action_import_poll_file"
         android:orderInCategory="200"
-        android:icon="@drawable/ic_insert_drive_file_black_24dp"
+        android:icon="@drawable/ic_cloud_upload_black_24dp"
         android:title="Importar"
         android:iconTint="@android:color/white"
         android:iconTintMode="add"

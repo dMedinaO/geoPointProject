@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.BitmapFactory;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
@@ -15,7 +16,9 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Base64;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.json.JSONException;
@@ -72,6 +75,15 @@ public abstract class QuestionActivity extends CustomActivity {
 
         ((TextView) findViewById(R.id.questiontitle)).setText(question.getTitle());
         ((TextView) findViewById(R.id.questiondescription)).setText(question.getDescription());
+        ImageView imageView = findViewById(R.id.questionimage);
+        if (question.getOptions().containsKey("image")){
+            byte[] decodedImageBytes = Base64.decode(question.getOptions().get("image").toString(), Base64.DEFAULT);
+            imageView.setImageBitmap(BitmapFactory.decodeByteArray(decodedImageBytes, 0, decodedImageBytes.length));
+            imageView.setVisibility(View.VISIBLE);
+        }
+        else{
+            imageView.setVisibility(View.GONE);
+        }
         setContent();
     }
 

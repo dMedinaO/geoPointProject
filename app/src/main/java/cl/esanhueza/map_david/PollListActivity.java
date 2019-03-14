@@ -83,7 +83,7 @@ public class PollListActivity extends CustomActivity {
     }
     public void openPoll(Poll poll){
         Intent intent = new Intent(this, PollDetailsActivity.class);
-        intent.putExtra("POLL", poll.toJson());
+        intent.putExtra("POLL", poll.getPath());
         startActivityForResult(intent, ANSWER_POLL);
     }
 

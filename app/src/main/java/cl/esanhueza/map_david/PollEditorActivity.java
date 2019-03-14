@@ -310,9 +310,9 @@ public class PollEditorActivity extends CustomActivity {
         }
         if (resultCode == Activity.RESULT_OK) {
             String returnedResult = data.getData().toString();
-            Log.d("Result", "Pregunta contestada, respuesta: " + returnedResult);
+            //Log.d("Result", "Pregunta contestada, respuesta: " + returnedResult);
 
-            Toast.makeText(this, returnedResult, Toast.LENGTH_LONG).show();
+            //Toast.makeText(this, returnedResult, Toast.LENGTH_LONG).show();
 
             JSONObject obj = new JSONObject();
             try {
@@ -324,18 +324,18 @@ public class PollEditorActivity extends CustomActivity {
             Question q = new Question(obj);
 
             if (q.getNumber() >= 0){
-                Log.i("TST ENCUESTA: ", "Pregunta actualizada");
+                //Log.i("TST ENCUESTA: ", "Pregunta actualizada");
                 questionsList.set(q.getNumber(), q);
             }
             else{
-                Log.i("TST ENCUESTA: ", "Pregunta agregada");
+                //Log.i("TST ENCUESTA: ", "Pregunta agregada");
                 questionsList.add(q);
             }
             mAdapter.notifyDataSetChanged();
 
         }
         else{
-            Log.d("Result", "Pregunta cerrada sin terminar de contestar.");
+            //Log.d("Result", "Pregunta cerrada sin terminar de contestar.");
         }
     }
 

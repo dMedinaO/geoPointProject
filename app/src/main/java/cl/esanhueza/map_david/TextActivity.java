@@ -56,12 +56,6 @@ public class TextActivity extends QuestionActivity{
                 e.printStackTrace();
             }
         }
-        if (question.getOptions().containsKey("image")){
-            ImageView imageView = findViewById(R.id.questionimage);
-            byte[] decodedImageBytes = Base64.decode(question.getOptions().get("image").toString(), Base64.DEFAULT);
-            imageView.setImageBitmap(BitmapFactory.decodeByteArray(decodedImageBytes, 0, decodedImageBytes.length));
-            imageView.setVisibility(View.VISIBLE);
-        }
     }
 
     @Override

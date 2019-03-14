@@ -58,6 +58,7 @@ import java.util.UUID;
 import cl.esanhueza.map_david.models.Poll;
 import cl.esanhueza.map_david.models.Question;
 import cl.esanhueza.map_david.storage.PersonContract;
+import cl.esanhueza.map_david.storage.PollFileStorageHelper;
 import cl.esanhueza.map_david.storage.ResponseContract;
 import cl.esanhueza.map_david.storage.ResponseDbHelper;
 
@@ -101,17 +102,11 @@ public class PollActiveActivity extends CustomActivity {
 
         String pollString = bundle.getString("POLL");
 
-        try {
-            JSONObject pollJson = new JSONObject(pollString);
-            poll = new Poll(pollJson);
-            setTitle(poll.getTitle());
-            questionsList.addAll(poll.getQuestions());
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        poll = PollFileStorageHelper.readPoll(pollString);
+        setTitle(poll.getTitle());
+        questionsList.addAll(poll.getQuestions());
 
         mDbHelper = new ResponseDbHelper(getApplicationContext());// Gets the data repository in write mode
-
 
         mLocationManager = (LocationManager) this.getSystemService(LOCATION_SERVICE);
 
@@ -469,6 +464,12 @@ public class PollActiveActivity extends CustomActivity {
         removeResponseFromDb(idQuestion);
 
         SQLiteDatabase db = mDbHelper.getWritableDatabase();
+
+        db.delete(ResponseContract.ResponseEntry.TABLE_NAME,
+                ResponseContract.ResponseEntry.COLUMN_NAME_PERSON_ID + "= ? AND " +
+                        ResponseContract.ResponseEntry.COLUMN_NAME_QUESTION_ID + " = ?"
+                , new String[]{personId, String.valueOf(idQuestion)});
+
         // Create a new map of values, where column names are the keys
         ContentValues values = new ContentValues();
         values.put(ResponseContract.ResponseEntry.COLUMN_NAME_CONTENT, content.toString());

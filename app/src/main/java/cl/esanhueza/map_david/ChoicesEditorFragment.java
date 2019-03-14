@@ -18,6 +18,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -49,11 +50,12 @@ public class ChoicesEditorFragment extends QuestionEditorFragment {
         TextView maxView = this.getView().findViewById(R.id.max_choices);
         int max = Integer.valueOf(maxView.getText().toString());
         String error = null;
+
         if (mAdapter.getCount() == 0){
             error = "Una pregunta con alternativas debe tener dos alternativas como minimo.\n";
         }
         if (mAdapter.getCount() < max){
-            error = "El número de opciones seleccionables debe ser menor o igual al número de alternativas ingresadas.\n";
+            error = "El máximo de alternativas a seleccionar debe ser igual o mayor al número de alternativas ingresadas.\n";
         }
         if (error != null){
             new AlertDialog.Builder(getContext())
@@ -104,6 +106,7 @@ public class ChoicesEditorFragment extends QuestionEditorFragment {
     public void addChoice(){
         mAdapter.saveEdit();
         mAdapter.add(new Choice("Valor", "Texto" + String.valueOf(mAdapter.getCount())));
+        setListViewHeightBasedOnChildren(listView);
     }
 
     /**
@@ -123,7 +126,6 @@ public class ChoicesEditorFragment extends QuestionEditorFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         mAdapter = new ChoiceAdapter(getContext(), new ArrayList<Choice>());
     }
 
@@ -131,6 +133,11 @@ public class ChoicesEditorFragment extends QuestionEditorFragment {
     public void updateQuestionContent(View view){
         super.updateQuestionContent(view);
         JSONArray alternativesArray = null;
+        if (options.containsKey("max")){
+            TextView textView = view.findViewById(R.id.max_choices);
+            textView.setText(String.valueOf(options.get("max")));
+        }
+
         if (options.containsKey("alternatives")){
             alternativesArray = (JSONArray) options.get("alternatives");
         }
@@ -149,6 +156,7 @@ public class ChoicesEditorFragment extends QuestionEditorFragment {
         }
 
         mAdapter.notifyDataSetChanged();
+        setListViewHeightBasedOnChildren(listView);
     }
 
     @Override
@@ -181,6 +189,28 @@ public class ChoicesEditorFragment extends QuestionEditorFragment {
         super.onDetach();
     }
 
+
+    public static void setListViewHeightBasedOnChildren(ListView listView) {
+        ListAdapter listAdapter = listView.getAdapter();
+        if (listAdapter == null) {
+            // pre-condition
+            return;
+        }
+
+        int totalHeight = 0;
+        for (int i = 0; i < listAdapter.getCount(); i++) {
+            View listItem = listAdapter.getView(i, null, listView);
+            listItem.measure(0, 0);
+            totalHeight += listItem.getMeasuredHeight();
+        }
+
+        ViewGroup.LayoutParams params = listView.getLayoutParams();
+        params.height = totalHeight + (listView.getDividerHeight() * (listAdapter.getCount() - 1));
+        listView.setLayoutParams(params);
+        listView.requestLayout();
+    }
+
+
     public class ChoiceAdapter extends ArrayAdapter<Choice> {
         private Context mContext;
         private ArrayList<Choice> itemList;
@@ -195,16 +225,20 @@ public class ChoicesEditorFragment extends QuestionEditorFragment {
         public void remove(Choice choice){
             saveEdit();
             super.remove(choice);
+            setListViewHeightBasedOnChildren(listView);
         }
 
         public void saveEdit(){
             for (int i=0; i<this.getCount(); i++){
                 TextView label = listView.findViewWithTag("label" + String.valueOf(i));
-                this.getItem(i).setLabel(label.getText().toString());
+                if(label != null){
+                    this.getItem(i).setLabel(label.getText().toString());
+                }
 
                 TextView value = listView.findViewWithTag("value" + String.valueOf(i));
-                this.getItem(i).setValue(value.getText().toString());
-
+                if(value != null){
+                    this.getItem(i).setValue(value.getText().toString());
+                }
             }
         }
 

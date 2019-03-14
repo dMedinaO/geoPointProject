@@ -89,6 +89,7 @@ public class Question {
     }
 
     public void putOption(String key, Object obj) {
+        if (this.options.containsKey(key)) this.options.remove(key);
         this.options.put(key, obj);
     }
 

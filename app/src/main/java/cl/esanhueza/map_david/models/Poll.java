@@ -10,6 +10,7 @@ public class Poll {
     private String id;
     private String title;
     private String description;
+    private String path;
     private ArrayList<Question> questions = new ArrayList<>();
 
     public Poll(String id, String title, String description) {
@@ -95,5 +96,13 @@ public class Poll {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
     }
 }

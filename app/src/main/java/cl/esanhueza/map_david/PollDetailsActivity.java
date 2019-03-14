@@ -58,27 +58,23 @@ public class PollDetailsActivity extends CustomActivity {
         Bundle bundle = intent.getExtras();
         String pollString = bundle.getString("POLL");
 
-        try {
-            JSONObject pollJson = new JSONObject(pollString);
-            poll = new Poll(pollJson);
 
-            setTitle("Detalle de la encuesta");
-            TextView viewTitle = findViewById(R.id.polltitle);
-            viewTitle.setText(poll.getTitle());
+        poll = PollFileStorageHelper.readPoll(pollString);
 
-            TextView viewDescription = findViewById(R.id.polldescription);
-            viewDescription.setText(poll.getDescription());
+        setTitle("Detalle de la encuesta");
+        TextView viewTitle = findViewById(R.id.polltitle);
+        viewTitle.setText(poll.getTitle());
 
-            TextView viewAnswers = findViewById(R.id.poll_answers);
-            viewAnswers.setText(String.valueOf(0));
+        TextView viewDescription = findViewById(R.id.polldescription);
+        viewDescription.setText(poll.getDescription());
 
-            TextView viewQuestions = findViewById(R.id.poll_question_number);
-            viewQuestions.setText(String.valueOf(poll.getQuestions().size()));
+        TextView viewAnswers = findViewById(R.id.poll_answers);
+        viewAnswers.setText(String.valueOf(0));
 
-            loadStats();
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        TextView viewQuestions = findViewById(R.id.poll_question_number);
+        viewQuestions.setText(String.valueOf(poll.getQuestions().size()));
+
+        loadStats();
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -221,16 +217,15 @@ public class PollDetailsActivity extends CustomActivity {
         }
     }
 
-    private void refreshStorage(String result){
-        if (result == null){ return; }
+    private void refreshStorage(String path){
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            MediaScannerConnection.scanFile(this, new String[]{result}, null, new MediaScannerConnection.OnScanCompletedListener() {
+            MediaScannerConnection.scanFile(this, new String[]{path}, null, new MediaScannerConnection.OnScanCompletedListener() {
                 public void onScanCompleted(String path, Uri uri) {
                 }
             });
         } else {
             this.sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED,
-                    Uri.parse("file://" + result)));
+                    Uri.parse("file://" + path)));
         }
     }
 
@@ -341,15 +336,13 @@ public class PollDetailsActivity extends CustomActivity {
 
         JSONArray responses = new JSONArray();
 
-        responsesCursor.moveToFirst();
-
         try {
             while (personsCursor.moveToNext()) {
                 String personId = personsCursor.getString(1);
                 JSONObject personObj = new JSONObject();
                 personObj.put("start", personsCursor.getString(0));
                 personObj.put("end", personsCursor.getString(4));
-                personObj.put("idPersona", personId);
+                //personObj.put("idPersona", personId);
 
                 JSONObject position = new JSONObject();
                 if (personsCursor.getString(2) != null){
@@ -360,7 +353,7 @@ public class PollDetailsActivity extends CustomActivity {
 
                 JSONArray personResponses = new JSONArray();
                 String responsePersonId = null;
-
+                responsesCursor.moveToFirst();
                 do{
                     responsePersonId = responsesCursor.getString(0);
                     JSONObject responseObj = new JSONObject(responsesCursor.getString(1));
@@ -379,9 +372,8 @@ public class PollDetailsActivity extends CustomActivity {
         } finally {
             personsCursor.close();
             responsesCursor.close();
-
-            String result = PollFileStorageHelper.saveResponses(getApplicationContext(), uriDestination, poll, responses);
-            refreshStorage(result);
+            boolean result = PollFileStorageHelper.saveResponses(getApplicationContext(), uriDestination, poll, responses);
+            if (result) refreshStorage(uriDestination.getPath());
         }
     }
 
@@ -425,7 +417,7 @@ public class PollDetailsActivity extends CustomActivity {
         if (personId != null){
             intent.putExtra("PERSON", personId);
         }
-        intent.putExtra("POLL", poll.toJson());
+        intent.putExtra("POLL", poll.getPath());
         startActivityForResult(intent, TAKE_POLL);
     }
 

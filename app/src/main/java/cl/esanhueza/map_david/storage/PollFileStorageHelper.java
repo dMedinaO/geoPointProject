@@ -71,6 +71,10 @@ public class PollFileStorageHelper {
         String title = poll.getTitle().replaceAll(" ", "_");
         File file = new File(folder.getAbsolutePath(),  title + "_" + poll.getId() + ".json");
         boolean result = file.delete();
+        if (!result){
+            file = new File(folder.getAbsolutePath(),  poll.getTitle() + "_" + poll.getId() + ".json");
+            result = file.delete();
+        }
         return result;
     }
 
@@ -97,7 +101,7 @@ public class PollFileStorageHelper {
         return true;
     }
 
-    static final public String saveResponses(Context context, Uri uriDestination, Poll poll, JSONArray array){
+    static final public boolean saveResponses(Context context, Uri uriDestination, Poll poll, JSONArray array){
         Log.d("TST ENCUESATAS: ", array.toString());
         try {
             ParcelFileDescriptor pfd = context.getContentResolver().openFileDescriptor(uriDestination, "w");
@@ -112,13 +116,15 @@ public class PollFileStorageHelper {
             pfd.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+            return false;
         } catch (IOException e) {
             e.printStackTrace();
+            return false;
         } catch (JSONException e) {
             e.printStackTrace();
+            return false;
         }
-
-        return "hy";
+        return true;
         /*
         File file = new File(destinationFilePath);
         Log.d("SAVE RESPONSES", destinationFilePath);
@@ -144,8 +150,8 @@ public class PollFileStorageHelper {
         try {
             JSONObject json = new JSONObject(poll.toJson());
             File folder = PollFileStorageHelper.getPublicPollStorageDir();
-            String title = poll.getTitle();
-            title.replaceAll(" ", "_");
+            String title = poll.getTitle().replaceAll(" ", "_");
+
             File file = new File(folder.getAbsolutePath(),  title + "_" + poll.getId() + ".json");
             if (!file.exists()){
                 file.createNewFile();
@@ -177,7 +183,6 @@ public class PollFileStorageHelper {
                 if (files[i].isDirectory()){
                     continue;
                 }
-                Log.d("TST ENCUESTAS: ", files[i].getAbsolutePath());
                 StringBuilder stringBuilder = new StringBuilder();
                 String line = null;
                 BufferedReader br = new BufferedReader(new FileReader(files[i]));
@@ -187,7 +192,10 @@ public class PollFileStorageHelper {
                 }
 
                 JSONObject json = new JSONObject(stringBuilder.toString());
-                polls.add(new Poll(json));
+
+                Poll poll = new Poll(json);
+                poll.setPath(files[i].getAbsolutePath());
+                polls.add(poll);
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -195,5 +203,28 @@ public class PollFileStorageHelper {
             e.printStackTrace();
         }
         return polls;
+    }
+
+    static final public Poll readPoll(String filePath){
+        try {
+            File file = new File(filePath);
+            StringBuilder stringBuilder = new StringBuilder();
+            String line = null;
+            BufferedReader br = new BufferedReader(new FileReader(file));
+
+            while ((line = br.readLine()) != null) {
+                stringBuilder.append(line);
+            }
+
+            JSONObject json = new JSONObject(stringBuilder.toString());
+            Poll poll = new Poll(json);
+            poll.setPath(filePath);
+            return poll;
+        } catch (JSONException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }
