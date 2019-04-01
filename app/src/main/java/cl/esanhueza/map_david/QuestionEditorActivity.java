@@ -102,10 +102,15 @@ public class QuestionEditorActivity extends AppCompatActivity{
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id){
                 setFragment(keys.get(position));
                 question.setType(keys.get(position));
+                LinearLayout linearLayout = findViewById(R.id.question_details);
+                linearLayout.setVisibility(View.VISIBLE);
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> parent){}
+            public void onNothingSelected(AdapterView<?> parent){
+                LinearLayout linearLayout = findViewById(R.id.question_details);
+                linearLayout.setVisibility(View.GONE);
+            }
         });
 
         ImageButton btn = findViewById(R.id.btn_attach_image);
@@ -117,6 +122,8 @@ public class QuestionEditorActivity extends AppCompatActivity{
                 attachImage();
             }
         });
+
+
     }
 
     // cambia el fragmento del formulario, dependiendo del tipo de pregunta

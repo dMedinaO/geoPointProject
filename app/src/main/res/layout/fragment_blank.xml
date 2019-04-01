@@ -9,6 +9,6 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="Eliga un tipo de pregunta antes de continuar." />
+        android:text="@string/help_question_blank" />
 
 </FrameLayout>

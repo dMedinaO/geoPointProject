@@ -91,7 +91,6 @@ public class PollActiveActivity extends CustomActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d("TST ENCUESTAS: ", "onCreate");
         setContentView(R.layout.activity_poll_active);
 
         final Toolbar myToolbar = (Toolbar) findViewById(R.id.poll_toolbar);
@@ -118,7 +117,6 @@ public class PollActiveActivity extends CustomActivity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Log.d("TST ENCUESTAS: ", String.valueOf(position));
                 openQuestion(questionsList.get(position));
             }
         });
@@ -137,10 +135,8 @@ public class PollActiveActivity extends CustomActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        Log.d("TST ENCUESTAS: ", "onCreateOptionsMenu");
         getMenuInflater().inflate(R.menu.menu_poll_active, menu);
         mMenu = menu;
-        Log.d("TST ENCUESTAS: ", "onResume");
 
         mLocationListener = new LocationListener() {
             @Override
@@ -156,12 +152,10 @@ public class PollActiveActivity extends CustomActivity {
 
             @Override
             public void onStatusChanged(String provider, int status, Bundle extras) {
-                Log.d("TEST ENCUESTA: ", "onStatusChanged");
             }
 
             @Override
             public void onProviderEnabled(String provider) {
-                Log.d("TEST ENCUESTA: ", "onProviderEnabled");
                 MenuItem menuItem = (MenuItem) mMenu.getItem(0);
                 Drawable drawable = getResources().getDrawable(R.drawable.ic_location_on_black_24dp);
                 drawable = DrawableCompat.wrap(drawable);
@@ -177,18 +171,17 @@ public class PollActiveActivity extends CustomActivity {
                 DrawableCompat.setTint(drawable, getResources().getColor(R.color.colorWarning));
                 menuItem.setIcon(drawable);
 
-                Log.d("TEST ENCUESTA: ", "onProviderDisabled");
                 new AlertDialog.Builder(PollActiveActivity.this)
                         .setIcon(android.R.drawable.ic_dialog_alert)
-                        .setTitle("Se requiere conocer la ubicación")
-                        .setMessage("La toma de encuestas requiere conocer la ubicacion actual del dispositivo.")
-                        .setNegativeButton("Continuar", new DialogInterface.OnClickListener() {
+                        .setTitle(R.string.text_require_position_title)
+                        .setMessage(R.string.text_require_position)
+                        .setNegativeButton(R.string.label_button_continue, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 workWithoutLocation = true;
                             }
                         })
-                        .setPositiveButton("Activar", new DialogInterface.OnClickListener() {
+                        .setPositiveButton(R.string.label_button_enable_gps, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 final Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
@@ -225,7 +218,6 @@ public class PollActiveActivity extends CustomActivity {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         } else {
-            Log.d("TEST ENCUESTA: ", "Actualizando posicion.");
             mLocationManager.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, mLocationListener, null);
         }
     }
@@ -266,7 +258,6 @@ public class PollActiveActivity extends CustomActivity {
             String returnedResult = data.getData().toString();
             try {
                 JSONObject result = new JSONObject(returnedResult);
-                Log.d("Result", "Pregunta contestada, respuesta: " + returnedResult);
 
                 Toast.makeText(this, returnedResult, Toast.LENGTH_LONG).show();
                 Question q = findQuestionByNumber(requestCode);
@@ -277,11 +268,9 @@ public class PollActiveActivity extends CustomActivity {
                     checkCompleted();
                 }
             } catch (JSONException e) {
-                Log.e("PollActiveActivity", "La actividad de la pregunta debe retornar un string en formato json valido.");
                 e.printStackTrace();
             }
         } else {
-            Log.d("Result", "Pregunta cerrada sin terminar de contestar.");
         }
     }
 
@@ -317,9 +306,9 @@ public class PollActiveActivity extends CustomActivity {
             if (q.getState() == "Pendiente") {
                 new AlertDialog.Builder(this)
                         .setIcon(android.R.drawable.ic_dialog_alert)
-                        .setTitle("Encuesta incompleta")
-                        .setMessage("¿Esta seguro que desea abandonar esta encuesta? Se perdera el progreso.")
-                        .setPositiveButton("Abandonar", new DialogInterface.OnClickListener() {
+                        .setTitle(R.string.text_poll_incomplete_title)
+                        .setMessage(R.string.text_poll_incomplete)
+                        .setPositiveButton(R.string.text_poll_leave_poll, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 removeResponsesFromDb();
@@ -327,7 +316,7 @@ public class PollActiveActivity extends CustomActivity {
                                 finish();
                             }
                         })
-                        .setNegativeButton("Cancelar", null)
+                        .setNegativeButton(R.string.label_button_cancel, null)
                         .show();
                 return;
             }
@@ -378,7 +367,6 @@ public class PollActiveActivity extends CustomActivity {
         db.close();
     }
 
-
     /* recupera una respuesta */
     private ArrayList<String> loadProgress() {
         SQLiteDatabase db = mDbHelper.getWritableDatabase();
@@ -399,9 +387,8 @@ public class PollActiveActivity extends CustomActivity {
         while (cursor.moveToNext()){
             ids.add(cursor.getString(0));
         }
-        Log.d("TST ENCUESTAS:", ids.toString());
+
         for (Question q : questionsList){
-            Log.d("TST ENCUESTAS:", String.valueOf(q.getNumber()));
             if (ids.contains(String.valueOf(q.getNumber()))){
                 q.setState("Contestada");
             }
@@ -494,7 +481,6 @@ public class PollActiveActivity extends CustomActivity {
     private Question findQuestionByNumber(int n) {
         for (Question q : questionsList) {
             if (q.getNumber() == n) {
-                Log.d("Test mob: ", "questionType " + q.getType());
                 return q;
 
             }

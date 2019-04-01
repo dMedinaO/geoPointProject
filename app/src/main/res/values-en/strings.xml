@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Polls</string>
+    <string name="default_poll_title">Poll Title</string>
+
+    <string name="action_settings">Settings</string>
+    <string name="pref_lang">Language</string>
+    <string-array name="pref_lang_list_titles">
+        <item>Spanish</item>
+        <item>English</item>
+    </string-array>
+    <string-array name="pref_lang_list_values">
+        <item>es</item>
+        <item>en</item>
+    </string-array>
+</resources>

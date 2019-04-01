@@ -28,7 +28,7 @@
             android:layout_weight="10"
             android:ems="10"
             android:inputType="textPersonName"
-            android:text="Texto" />
+            android:text="@string/default_item_label" />
 
         <ImageButton
             android:id="@+id/btn_remove_item"

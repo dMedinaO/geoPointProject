@@ -15,7 +15,7 @@
             android:id="@+id/textView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Indique donde deberá estar centrado el mapa." />
+            android:text="@string/help_question_point_center_map" />
 
         <org.osmdroid.views.MapView
             android:id="@+id/map"
@@ -28,7 +28,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Seleccione el tipo de pregunta secundaria" />
+            android:text="@string/help_question_point_secondary_question" />
 
         <Spinner
             android:id="@+id/spinner_question_type"
@@ -41,7 +41,7 @@
             android:layout_height="wrap_content"
             android:ems="10"
             android:inputType="textMultiLine"
-            android:text="Titulo de la pregunta."
+            android:text="@string/default_question_title"
             app:layout_anchor="@+id/scrolllist"
             app:layout_anchorGravity="top|center" />
 
@@ -51,7 +51,7 @@
             android:layout_height="wrap_content"
             android:ems="10"
             android:inputType="textMultiLine"
-            android:text="Descripción" />
+            android:text="@string/default_poll_description" />
 
         <FrameLayout
             android:id="@+id/secondary_fragment_container"

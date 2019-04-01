@@ -33,10 +33,7 @@ public class PointPlusActivity extends QuestionActivity {
     Map<String, Class> questionTypeList = new HashMap<String, Class>();
     MapView mMap;
     IMapController mMapController;
-    ArrayList<OverlayItem> mItems;
     DrawPointOverlay mPointsOverlay;
-    ItemizedOverlayWithFocus<OverlayItem> mDrawingOverlay;
-    String response;
     GeoPoint pointSelected;
 
     @Override
@@ -48,33 +45,12 @@ public class PointPlusActivity extends QuestionActivity {
         mMap = (MapView) findViewById(R.id.map);
         mMap.setTileSource(TileSourceFactory.MAPNIK); // MAPNIK = Openstreemap
 
-        mMap.setBuiltInZoomControls(false);
-        mMap.setMultiTouchControls(true);
+        mMap.setBuiltInZoomControls(true);
 
         // initialize controller
         mMapController = mMap.getController();
         // set zoom and start position
-        mMapController.setZoom(13.0);
-        GeoPoint startPoint = new GeoPoint(-33.447487, -70.673676);
-        mMapController.setCenter(startPoint);
-
-        // initialize array to store icons.
-        mItems = new ArrayList<OverlayItem>();
-
-        mItems.add(new OverlayItem("Title", "Description", new GeoPoint(-33.447487, -70.673676)));
-
-        mDrawingOverlay = new ItemizedOverlayWithFocus<OverlayItem>(this, mItems,
-            new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
-                @Override
-                public boolean onItemSingleTapUp(final int index, final OverlayItem item) {
-                    //do something
-                    return true;
-                }
-                @Override
-                public boolean onItemLongPress(final int index, final OverlayItem item) {
-                    return false;
-                }
-            });
+        mMapController.setZoom(17.0);
 
         mPointsOverlay = new DrawPointOverlay(mMap);
         mMap.getOverlays().add(mPointsOverlay);
@@ -96,20 +72,24 @@ public class PointPlusActivity extends QuestionActivity {
 
     public void _saveResponse(){
         if (pointSelected == null){
-            Toast.makeText(this, "Debe seleccionar un punto.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, R.string.text_question_point_must_select_point, Toast.LENGTH_LONG).show();
             return;
         }
 
-        if (response == ""){
-            Toast.makeText(this, "Debe responder la pregunta antes de continuar. Seleccionar un punto.", Toast.LENGTH_LONG).show();
+        if (response == null){
+            Toast.makeText(this, R.string.text_question_point_must_anwser, Toast.LENGTH_LONG).show();
             return;
         }
+
         Intent intent = new Intent();
-        String text = "";
-        text += "{\"response\": " + response + ",";
-        text += "\"latitude\":" + String.valueOf(pointSelected.getLatitude());
-        text += ",\"longitude\":" + String.valueOf(pointSelected.getLongitude()) + "}";
-        intent.setData(Uri.parse(text));
+        try {
+            response.put("latitude", pointSelected.getLatitude());
+            response.put("longitude", pointSelected.getLongitude());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        intent.setData(Uri.parse(response.toString()));
         setResult(Activity.RESULT_OK, intent);
         finish();
     }
@@ -132,7 +112,7 @@ public class PointPlusActivity extends QuestionActivity {
         Intent intent = new Intent(this, activity);
         intent.putExtra("QUESTION", q.toJson());
         if (response != null){
-            intent.putExtra("RESPONSE", response);
+            intent.putExtra("RESPONSE", response.toString());
         }
         startActivityForResult(intent, q.getNumber());
     }
@@ -140,14 +120,16 @@ public class PointPlusActivity extends QuestionActivity {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == Activity.RESULT_OK) {
             String returnedResult = data.getData().toString();
-            Log.d("Result", "Pregunta contestada, respuesta: " + returnedResult);
-            response = returnedResult;
-            question.setState("Contestada");
-            Toast.makeText(this, returnedResult, Toast.LENGTH_LONG).show();
+            try {
+                response = new JSONObject(returnedResult);
+                question.setState("Contestada");
+                Toast.makeText(this, returnedResult, Toast.LENGTH_LONG).show();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
         else{
             pointSelected = null;
-            Log.d("Result", "Pregunta cerrada sin terminar de contestar.");
         }
     }
 
@@ -168,12 +150,16 @@ public class PointPlusActivity extends QuestionActivity {
             JSONArray arr;
             try {
                 arr = (JSONArray) opts.get("points");
-                Log.d("JSONArray: ", String.valueOf(arr));
                 for (int i = 0; i < arr.length(); i++){
                     Marker m = addMarker(mapView);
                     JSONObject obj = (JSONObject) arr.get(i);
                     GeoPoint gp = new GeoPoint(obj.getDouble("latitude"), obj.getDouble("longitude"));
                     m.setPosition(gp);
+                }
+                if (arr.length() > 0){
+                    JSONObject obj = (JSONObject) arr.get(0);
+                    GeoPoint gp = new GeoPoint(obj.getDouble("latitude"), obj.getDouble("longitude"));
+                    mMapController.setCenter(gp);
                 }
             } catch (JSONException e) {
                 e.printStackTrace();

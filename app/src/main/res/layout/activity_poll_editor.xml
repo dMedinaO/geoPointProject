@@ -34,7 +34,7 @@
             android:layout_height="wrap_content"
             android:ems="10"
             android:inputType="textPersonName"
-            android:text="Titulo" />
+            android:text="@string/default_poll_title" />
 
         <EditText
             android:id="@+id/polldescription"
@@ -42,7 +42,7 @@
             android:layout_height="wrap_content"
             android:ems="10"
             android:inputType="textMultiLine"
-            android:text="Descripcion" />
+            android:text="@string/default_poll_description" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -65,10 +65,10 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|right"
         android:layout_margin="16dp"
-        android:tooltipText="Crear pregunta"
         android:onClick="handleNewQuestion"
         android:src="@drawable/ic_add_black_24dp"
         android:tint="#ffffff"
+        android:tooltipText="Agregar pregunta"
         app:layout_anchorGravity="bottom|right|end" />
 
 </android.support.design.widget.CoordinatorLayout>

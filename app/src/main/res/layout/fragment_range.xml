@@ -13,7 +13,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Mínimo"
+            android:text="@string/help_question_range_min"
             android:textAlignment="center"
             android:textAppearance="@android:style/TextAppearance.Material.Large" />
 
@@ -51,7 +51,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Máximo"
+            android:text="@string/help_question_range_max"
             android:textAlignment="center"
             android:textAppearance="@android:style/TextAppearance.Material.Large" />
 
@@ -90,7 +90,7 @@
             android:id="@+id/btn_add_item"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Agregar Item" />
+            android:text="@string/label_button_add_item" />
 
         <ListView
             android:id="@+id/item_list"

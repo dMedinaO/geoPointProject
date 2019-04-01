@@ -56,10 +56,9 @@ public class MultipleChoiceActivity extends QuestionActivity{
         // por defecto solo es posible seleccionar una opcion
         if (options.containsKey("max")){
             maxSelected = Integer.valueOf(String.valueOf(options.get("max")));
-            if (maxSelected < 1){
-                Toast.makeText(this, "El número de opciones seleccionables debe ser mayor a 1.", Toast.LENGTH_LONG).show();
-                return;
-            }
+        }
+        else{
+            maxSelected = 100000;
         }
         JSONArray jsonArray = (JSONArray) options.get("alternatives");
         LinearLayout linearLayout = (LinearLayout) findViewById(R.id.questions);
@@ -73,7 +72,6 @@ public class MultipleChoiceActivity extends QuestionActivity{
                             selectedList.add(selected.get(j));
                         }
                     }
-                    Log.d("TST ENCUESTAS:", selectedList.toString());
                     JSONObject alt = jsonArray.getJSONObject(i);
                     CheckBox box = new CheckBox(getApplicationContext());
                     box.setText(alt.getString("label"));
@@ -122,16 +120,16 @@ public class MultipleChoiceActivity extends QuestionActivity{
                 }
             }
             if(checkedCount == 0){
-                error = "Debe seleccionar una opción";
+                error = getString(R.string.text_question_choice_at_least_one_alternative);
             }
             if (checkedCount > maxSelected){
-                error = "Solo puede seleccionar hasta " + String.valueOf(maxSelected) + " opciones.";
+                error = getString(R.string.text_question_choice_max_alternatives_selected) + String.valueOf(maxSelected) + " ";
             }
         }
         else{
             int idSelected = radioGroup.getCheckedRadioButtonId();
             if (idSelected == -1){
-                error = "Debe seleccionar una opción.";
+                error = getString(R.string.text_question_choice_at_least_one_alternative);
             }
 
         }

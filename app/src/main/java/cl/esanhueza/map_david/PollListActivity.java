@@ -20,6 +20,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -50,7 +52,7 @@ public class PollListActivity extends CustomActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        setTitle("Encuestas");
+        setTitle(R.string.app_name);
 
         listView = findViewById(R.id.poll_list);
         mAdapter = new PollAdapter(this, list);
@@ -81,6 +83,30 @@ public class PollListActivity extends CustomActivity {
 
         loadList();
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_poll_list, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_settings:
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
+                return true;
+
+            default:
+                // If we got here, the user's action was not recognized.
+                // Invoke the superclass to handle it.
+                return super.onOptionsItemSelected(item);
+
+        }
+    }
+
     public void openPoll(Poll poll){
         Intent intent = new Intent(this, PollDetailsActivity.class);
         intent.putExtra("POLL", poll.getPath());
@@ -115,7 +141,6 @@ public class PollListActivity extends CustomActivity {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
         } else {
-            Log.d("TEST ENCUESTA: ", "Actualizando posicion.");
             list.clear();
             list.addAll(PollFileStorageHelper.readPolls());
             mAdapter.notifyDataSetChanged();

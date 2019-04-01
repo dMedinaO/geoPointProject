@@ -43,7 +43,7 @@
                     android:id="@+id/questionhelp"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Doble click sobre el mapa para agregar un punto."
+                    android:text="@string/help_question_polygon"
                     android:textAppearance="@android:style/TextAppearance.Material.Small" />
 
                 <org.osmdroid.views.MapView
@@ -65,7 +65,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:onClick="cleanMap"
-                        android:text="Borrar todo" />
+                        android:text="@string/label_button_clean_response" />
 
                     <Button
                         android:id="@+id/save"
@@ -73,7 +73,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:onClick="saveResponse"
-                        android:text="Guardar" />
+                        android:text="@string/label_button_save_response" />
                 </LinearLayout>
 
             </LinearLayout>

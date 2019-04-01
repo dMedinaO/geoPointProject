@@ -2,9 +2,12 @@ package cl.esanhueza.map_david;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
@@ -42,7 +45,10 @@ import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +59,10 @@ import java.util.UUID;
 import cl.esanhueza.map_david.models.Choice;
 import cl.esanhueza.map_david.models.Poll;
 import cl.esanhueza.map_david.models.Question;
+import cl.esanhueza.map_david.storage.PersonContract;
 import cl.esanhueza.map_david.storage.PollFileStorageHelper;
+import cl.esanhueza.map_david.storage.ResponseContract;
+import cl.esanhueza.map_david.storage.ResponseDbHelper;
 
 
 public class PollEditorActivity extends CustomActivity {
@@ -110,16 +119,16 @@ public class PollEditorActivity extends CustomActivity {
             public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
                 new AlertDialog.Builder(PollEditorActivity.this)
                         .setIcon(android.R.drawable.ic_dialog_alert)
-                        .setTitle("¿Desea eliminar la pregunta?")
-                        .setMessage("Esta accion no puede revertirse.")
-                        .setNegativeButton("Cancelar", new DialogInterface.OnClickListener()
+                        .setTitle(R.string.text_delete_question)
+                        .setMessage(R.string.text_delete_question_more)
+                        .setNegativeButton(R.string.label_button_cancel, new DialogInterface.OnClickListener()
                         {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
 
                             }
                         })
-                        .setPositiveButton("Eliminar", new DialogInterface.OnClickListener()
+                        .setPositiveButton(R.string.label_button_accept, new DialogInterface.OnClickListener()
                         {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
@@ -165,16 +174,16 @@ public class PollEditorActivity extends CustomActivity {
             case R.id.action_delete_poll:
                 new AlertDialog.Builder(this)
                         .setIcon(android.R.drawable.ic_dialog_alert)
-                        .setTitle("¿Esta seguro que desea eliminar la encuesta?")
-                        .setMessage("La encuesta no podra ser recuperada.")
-                        .setNegativeButton("Cancelar", new DialogInterface.OnClickListener()
+                        .setTitle(R.string.text_delete_poll)
+                        .setMessage(R.string.text_delete_poll_more)
+                        .setNegativeButton(R.string.label_button_cancel, new DialogInterface.OnClickListener()
                         {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
 
                             }
                         })
-                        .setPositiveButton("Eliminar", new DialogInterface.OnClickListener()
+                        .setPositiveButton(R.string.label_button_accept, new DialogInterface.OnClickListener()
                         {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
@@ -187,25 +196,50 @@ public class PollEditorActivity extends CustomActivity {
                 return true;
 
             case R.id.action_save_poll:
-                new AlertDialog.Builder(this)
+                // si tiene respuestas, se guarda como una nueva encuesta.
+                if (pollHasAnswers(poll.getId())){
+                    new AlertDialog.Builder(this)
                         .setIcon(android.R.drawable.ic_dialog_alert)
-                        .setTitle("Confirmar")
-                        .setMessage("Se guardara la encuesta actual como una nueva encuesta.")
-                        .setNegativeButton("Cancelar", new DialogInterface.OnClickListener()
+                        .setTitle(R.string.text_save_poll)
+                        .setMessage(R.string.text_save_poll_as_new_more)
+                        .setNegativeButton(R.string.label_button_cancel, new DialogInterface.OnClickListener()
                         {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
 
                             }
                         })
-                        .setPositiveButton("Guardar y salir", new DialogInterface.OnClickListener()
+                        .setPositiveButton(R.string.label_button_accept, new DialogInterface.OnClickListener()
                         {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                savePoll();
+                                savePoll(true);
                             }
                         })
                         .show();
+                }
+                else{
+                    new AlertDialog.Builder(this)
+                            .setIcon(android.R.drawable.ic_dialog_alert)
+                            .setTitle(R.string.text_save_poll)
+                            .setMessage(R.string.text_save_poll_update)
+                            .setNegativeButton(R.string.label_button_cancel, new DialogInterface.OnClickListener()
+                            {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+
+                                }
+                            })
+                            .setPositiveButton(R.string.label_button_accept, new DialogInterface.OnClickListener()
+                            {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    savePoll(false);
+                                }
+                            })
+                            .show();
+                }
+
                 return true;
 
             default:
@@ -216,9 +250,14 @@ public class PollEditorActivity extends CustomActivity {
         }
     }
 
-    public void savePoll(){
-        String uuid = UUID.randomUUID().toString().replace("-", "");
-        poll.setId(uuid);
+    public void savePoll(boolean newPoll){
+        if (newPoll){
+            String uuid = UUID.randomUUID().toString().replace("-", "");
+            poll.setId(uuid);
+        }
+        else{
+            PollFileStorageHelper.deletePoll(poll);
+        }
         TextView titleView = findViewById(R.id.polltitle);
         TextView descriptionView = findViewById(R.id.polldescription);
         poll.setTitle(titleView.getText().toString());
@@ -234,6 +273,23 @@ public class PollEditorActivity extends CustomActivity {
         }
         setResult(Activity.RESULT_OK);
         finish();
+    }
+
+    private boolean pollHasAnswers(String pollId) {
+        ResponseDbHelper mDbHelper = new ResponseDbHelper(getApplicationContext());
+        SQLiteDatabase db = mDbHelper.getWritableDatabase();
+
+        // Insert the new row, returning the primary key value of the new row
+        Cursor cursor = db.query(PersonContract.PersonEntry.TABLE_NAME,
+                new String[]{
+                        PersonContract.PersonEntry.COLUMN_NAME_PERSON_ID
+                },PersonContract.PersonEntry.COLUMN_NAME_POLL_ID+ " = ?",
+                new String[]{
+                        poll.getId()
+                }, null, null, null);
+        int answers = cursor.getCount();
+        db.close();
+        return answers > 0;
     }
 
     private void importPoll(){
@@ -303,7 +359,6 @@ public class PollEditorActivity extends CustomActivity {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == PICKFILE_REQUEST_CODE){
             if (resultCode == Activity.RESULT_OK){
-                Log.d("TST  ENCUESTAS: ", data.getData().getPath() );
                 loadImportedPoll(data.getData());
             }
             return;
@@ -343,16 +398,16 @@ public class PollEditorActivity extends CustomActivity {
     public void onBackPressed() {
         new AlertDialog.Builder(this)
                 .setIcon(android.R.drawable.ic_dialog_alert)
-                .setTitle("¿Esta seguro que desea abandonar la encuesta?")
-                .setMessage("Se perderan los cambios realizados.")
-                .setNegativeButton("Cancelar", new DialogInterface.OnClickListener()
+                .setTitle(R.string.text_leave_poll_editor)
+                .setMessage(R.string.text_leave_poll_editor_more)
+                .setNegativeButton(R.string.label_button_cancel, new DialogInterface.OnClickListener()
                 {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
 
                     }
                 })
-                .setPositiveButton("Salir", new DialogInterface.OnClickListener()
+                .setPositiveButton(R.string.text_poll_leave_poll, new DialogInterface.OnClickListener()
                 {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {

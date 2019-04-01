@@ -38,7 +38,6 @@
                 android:id="@+id/polltitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="TextView"
                 android:textAlignment="center"
                 android:textAppearance="@android:style/TextAppearance.Material.Headline" />
 
@@ -78,7 +77,7 @@
                     android:id="@+id/textView2"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Encuestas realizadas"
+                    android:text="@string/text_polls_completed"
                     android:textAlignment="center" />
 
                 <TextView
@@ -106,7 +105,7 @@
                     android:id="@+id/textView4"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Preguntas"
+                    android:text="@string/text_question_in_poll"
                     android:textAlignment="center" />
 
                 <TextView
@@ -126,7 +125,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:tooltipText="Comenzar encuesta"
+        android:tooltipText="@string/label_button_start_poll"
         android:layout_margin="@dimen/fab_margin"
         android:tint="@android:color/background_light"
         app:backgroundTint="@android:color/holo_green_light"

@@ -125,25 +125,58 @@ public class PollFileStorageHelper {
             return false;
         }
         return true;
-        /*
-        File file = new File(destinationFilePath);
-        Log.d("SAVE RESPONSES", destinationFilePath);
-        try {
-            boolean created = file.createNewFile();
-            Log.d("CREATED: ", String.valueOf(created));
+    }
 
-            FileOutputStream fos = new FileOutputStream(file);
-            fos.write("hello world".getBytes());
+    static final public boolean saveResponsesCSV(Context context, Uri uriDestination, Poll poll, JSONArray array){
+        try {
+            ParcelFileDescriptor pfd = context.getContentResolver().openFileDescriptor(uriDestination, "w");
+            FileOutputStream fos = new FileOutputStream(pfd.getFileDescriptor());
+            String row = "";
+
+            row += "inicio,termino,latitud,longitud";
+            for (int i=0; i<poll.getQuestions().size(); i++){
+                row += ",pregunta" + String.valueOf(i);
+            }
+            row += "\r\n";
+
+            for (int i=0; i<array.length(); i++){
+                JSONObject obj = array.getJSONObject(i);
+                row += obj.getString("start");
+                row += "," + obj.getString("end");
+
+
+                if (obj.has("position")){
+                    row += "," + obj.getJSONObject("position").getDouble("latitude");
+                    row += "," + obj.getJSONObject("position").getDouble("longitude");
+                }
+                else{
+                    row += ",,";
+                }
+
+                JSONArray rs = obj.getJSONArray("respuestas");
+
+                Log.d("ENCUESTAS: ", rs.toString());
+                for (int j=0; j<rs.length(); j++) {
+                    JSONObject robj =  rs.getJSONObject(j);
+                    row += "," + robj.getString("value");
+                }
+                row += "\r\n";
+            }
+
+            fos.write(row.getBytes());
             fos.close();
+            pfd.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+            return false;
         } catch (IOException e) {
             e.printStackTrace();
+            return false;
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return false;
         }
-
-        //writeResponses(file, poll, array);
-        return file.getAbsolutePath();
-        */
+        return true;
     }
 
     static final public String savePoll(Poll poll){

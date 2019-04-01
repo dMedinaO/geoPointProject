@@ -1,6 +1,7 @@
 package cl.esanhueza.map_david;
 
 import android.app.Activity;
+import android.app.FragmentManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Paint;
@@ -31,21 +32,32 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RouteActivity extends QuestionActivity {
+import cl.esanhueza.map_david.Util.CustomPaintingSurface;
+import cl.esanhueza.map_david.Util.LockableScrollView;
+
+import static cl.esanhueza.map_david.R.id.fragment_map;
+
+public class RouteActivity extends QuestionActivity implements DrawLineFragment.EventListener{
     MapView mMap;
     IMapController mMapController;
     DrawLineOverlay mPointsOverlay;
 
     public void setContent(){
-        mMap = (MapView) findViewById(R.id.map);
+        DrawLineFragment drawLineFragment = (DrawLineFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_map);
+        drawLineFragment.paint.setMode(CustomPaintingSurface.Mode.Polyline);
+        LockableScrollView lockableScrollView = findViewById(R.id.scroll);
+        if (lockableScrollView != null){
+            lockableScrollView.setScrollingEnabled(true);
+        }
+
+        mMap = (MapView) findViewById(R.id.mapview);
         mMap.setTileSource(TileSourceFactory.MAPNIK); // MAPNIK = Openstreemap
 
         mMap.setBuiltInZoomControls(true);
-        mMap.setMultiTouchControls(true);
 
         // initialize controller
         mMapController = mMap.getController();
-        mMapController.setZoom(13.0);
+        mMapController.setZoom(17.0);
 
         // set zoom and start position
         if (question.getOptions().containsKey("zoom")){
@@ -72,18 +84,21 @@ public class RouteActivity extends QuestionActivity {
 
         mMapController.setCenter(startPoint);
 
-        mPointsOverlay = new DrawLineOverlay(mMap);
-        mMap.getOverlays().add(mPointsOverlay);
+        //mPointsOverlay = new DrawLineOverlay(mMap);
+        //mMap.getOverlays().add(mPointsOverlay);
 
 
         if(response != null){
             try {
                 JSONArray array = response.getJSONArray("value");
+                ArrayList<GeoPoint> points = new ArrayList<>();
                 for (int i=0; i<array.length(); i++){
                     JSONObject obj = array.getJSONObject(i);
                     GeoPoint p = new GeoPoint(obj.getDouble("latitude"), obj.getDouble("longitude"));
-                    mPointsOverlay.addPoint(p, mMap);
+                    //mPointsOverlay.addPoint(p, mMap);
+                    points.add(p);
                 }
+                drawLineFragment.setPoints(points);
                 mMap.invalidate();
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -96,14 +111,19 @@ public class RouteActivity extends QuestionActivity {
     };
 
     public void cleanMap(View view){
-        this.mPointsOverlay.cleanPoints(mMap);
+        //this.mPointsOverlay.cleanPoints(mMap);
+        DrawLineFragment drawLineFragment = (DrawLineFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_map);
+        drawLineFragment.clearPoints();
     }
 
     public void saveResponse(View view){
+        DrawLineFragment drawLineFragment = (DrawLineFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_map);
+
         Intent intent = new Intent();
-        List<GeoPoint> points = mPointsOverlay.figure.getPoints();
-        if (points.size() < 2){
-            Toast.makeText(this, "Un poligono debe tener al menos 2 puntos.", Toast.LENGTH_LONG).show();
+        List<GeoPoint> points = drawLineFragment.getPoints();
+
+        if (points == null || points.size() < 2){
+            Toast.makeText(this, R.string.text_question_route_min_points, Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -139,6 +159,15 @@ public class RouteActivity extends QuestionActivity {
     public void onPause(){
         super.onPause();
         mMap.onPause();  //needed for compass, my location overlays, v6.0.0 and up
+    }
+
+
+    @Override
+    public void toggleScroll(boolean toggle) {
+        LockableScrollView lockableScrollView = findViewById(R.id.scroll);
+        if (lockableScrollView != null){
+            lockableScrollView.setScrollingEnabled(toggle);
+        }
     }
 
     class DrawLineOverlay extends MyLocationNewOverlay{

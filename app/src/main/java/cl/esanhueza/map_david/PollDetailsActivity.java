@@ -40,6 +40,7 @@ public class PollDetailsActivity extends CustomActivity {
     static final int TAKE_POLL = 300;
     final static int PICKFOLDER_REQUEST_CODE = 9000;
     final static int WRITE_REQUEST_CODE = 5000;
+    final static int WRITE_REQUEST_CODE_CSV = 5001;
     ResponseDbHelper mDbHelper;
     Poll poll;
 
@@ -126,6 +127,12 @@ public class PollDetailsActivity extends CustomActivity {
                 createFile("text/plain", fileName + "_" + poll.getId() + ".json");
                 return true;
 
+            case R.id.action_export_responses_csv:
+                String csvFileName = poll.getTitle();
+                fileName = csvFileName .replace(" ", "_");
+                createFileCSV("text/csv", fileName + "_" + poll.getId() + ".csv");
+                return true;
+
             default:
                 // If we got here, the user's action was not recognized.
                 // Invoke the superclass to handle it.
@@ -181,6 +188,20 @@ public class PollDetailsActivity extends CustomActivity {
         return personId;
     }
 
+    private void createFileCSV(String mimeType, String fileName) {
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+
+        // Filter to only show results that can be "opened", such as
+        // a file (as opposed to a list of contacts or timezones).
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+
+        // Create a file with the requested MIME type.
+        intent.setType(mimeType);
+        intent.putExtra(Intent.EXTRA_TITLE, fileName);
+        startActivityForResult(intent, WRITE_REQUEST_CODE_CSV);
+        return;
+    }
+
     private void createFile(String mimeType, String fileName) {
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
 
@@ -197,10 +218,12 @@ public class PollDetailsActivity extends CustomActivity {
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == WRITE_REQUEST_CODE && resultCode == Activity.RESULT_OK){
-            exportResponses(data.getData());
+            exportResponses(data.getData(), "json");
         }
-
-        if (requestCode == TAKE_POLL && resultCode == Activity.RESULT_OK) {
+        else if (requestCode == WRITE_REQUEST_CODE_CSV && resultCode == Activity.RESULT_OK){
+            exportResponses(data.getData(), "csv");
+        }
+        else if (requestCode == TAKE_POLL && resultCode == Activity.RESULT_OK) {
             String personId = data.getStringExtra("personId");
             //exportResponse(personId);
             loadStats();
@@ -305,7 +328,7 @@ public class PollDetailsActivity extends CustomActivity {
         }
     }
 
-    private void exportResponses(Uri uriDestination){
+    private void exportResponses(Uri uriDestination, String format){
         SQLiteDatabase db = mDbHelper.getReadableDatabase();
 
         Cursor personsCursor = db.query(PersonContract.PersonEntry.TABLE_NAME,
@@ -372,7 +395,15 @@ public class PollDetailsActivity extends CustomActivity {
         } finally {
             personsCursor.close();
             responsesCursor.close();
-            boolean result = PollFileStorageHelper.saveResponses(getApplicationContext(), uriDestination, poll, responses);
+
+            boolean result = false;
+            if (format.equals("csv")){
+                result = PollFileStorageHelper.saveResponsesCSV(getApplicationContext(), uriDestination, poll, responses);
+            }
+            else{
+                result = PollFileStorageHelper.saveResponses(getApplicationContext(), uriDestination, poll, responses);
+            }
+
             if (result) refreshStorage(uriDestination.getPath());
         }
     }

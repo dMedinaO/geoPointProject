@@ -1,10 +1,114 @@
 <resources>
     <string name="app_name">Encuestas</string>
     <string name="title_activity_polygon">PolygonActivity</string>
-    <string name="action_settings">Settings</string>
+    <string name="action_settings">Configuración</string>
     <string name="title_activity_route">RouteActivity</string>
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="title_activity_poll_list">PollListActivity</string>
+    <string name="default_poll_title">Titulo de la encuesta</string>
+    <string name="default_poll_description">Descripción</string>
+
+    <string name="default_question_title">Titulo de la pregunta</string>
+    <string name="default_question_description">Descripción</string>
+    <string name="label_button_add_image">Agregar imagen</string>
+    <string name="label_button_save_question">Guardar</string>
+
+    <string name="help_question_blank">Debe seleccionar un tipo de pregunta antes de continuar.</string>
+
+    <string name="label_checkbox_choices_limit">Limitar número de alternativas seleccionables</string>
+    <string name="label_button_add_choice">Agregar alternativa</string>
+    <string name="label_choices_list">Listado de alternativas</string>
+
+    <string name="label_button_export_responses">Exportar respuestas</string>
+    <string name="label_button_export_responses_csv">Exportar respuestas en formato CSV</string>
+    <string name="label_button_delete_responses">Eliminar respuestas</string>
+
+    <string name="label_button_clean_response">Borrar todo</string>
+    <string name="label_button_save_response">Guardar</string>
+
+    <string name="help_question_point">Doble click sobre el mapa para agregar un punto.</string>
+    <string name="help_question_polygon">Doble click sobre el mapa para agregar un punto.</string>
+    <string name="help_question_route">Presione el botón a continuación y luego dibuje la ruta. Para terminar vuelva a presionar el botón.</string>
+
+    <string name="text_polls_completed">Encuestas realizadas</string>
+    <string name="text_question_in_poll">Preguntas</string>
+
+    <string name="label_button_start_poll">Comenzar encuesta</string>
+
+    <string name="help_question_route_center_map">Indique donde deberá estar centrado el mapa.</string>
+
+
+    <string name="help_question_point_center_map">Indique donde deberá estar centrado el mapa.</string>
+    <string name="help_question_point_secondary_question">Seleccione el tipo de pregunta secundaria.</string>
+
+    <string name="help_question_range_min">Mínimo</string>
+    <string name="help_question_range_max">Máximo</string>
+    <string name="label_button_add_item">Agregar item</string>
+
+    <string name="default_choice_label">Texto</string>
+    <string name="default_choice_value">Valor</string>
+
+    <string name="default_item_label">Texto</string>
+    <string name="title_activity_settings">Configuración</string>
+
+    <string name="label_question_type">Seleccione el tipo de pregunta</string>
+
+    <string name="text_require_position_title">Se requiere conocer la ubicación</string>
+    <string name="text_require_position">La toma de encuestas requiere conocer la ubicacion actual del dispositivo.</string>
+    <string name="label_button_continue">Continuar</string>
+    <string name="label_button_accept">Aceptar</string>
+    <string name="label_button_enable_gps">Habilitar GPS</string>
+
+
+    <string name="text_poll_incomplete_title">Encuesta incompleta</string>
+    <string name="text_poll_incomplete">¿Esta seguro que desea abandonar esta encuesta? Se perdera el progreso.</string>
+    <string name="text_poll_leave_poll">Abandonar</string>
+    <string name="label_button_cancel">Cancelar</string>
+
+    <string name="text_question_choice_editor_over_max_choices">El máximo de alternativas a seleccionar debe ser igual o mayor al número de alternativas ingresadas.</string>
+    <string name="text_question_choice_editor_at_least_two_alternatives">Una pregunta con alternativas debe tener dos alternativas como mínimo.</string>
+    <string name="text_question_choice_at_least_one_alternative">Debe seleccionar al menos una opción</string>
+    <string name="text_question_choice_max_alternatives_selected">El máximo de opciones seleccionables son: </string>
+
+
+    <string name="text_question_point_editor_must_add_points">Debe agregar los marcadores en el mapa.</string>
+
+    <string name="text_question_point_must_select_point">Debe seleccionar un punto.</string>
+    <string name="text_question_point_must_anwser">Debe responder la pregunta antes de continuar. Seleccione un punto.</string>
+    <string name="label_button_start_drawing">Comenzar a dibujar</string>
+    <string name="label_button_finish_drawing">Terminar de dibujar</string>
+
+    <string name="text_question_route_min_points">Una ruta debe tener al menos 2 puntos.</string>
+
+    <string name="text_delete_question">¿Desea eliminar la pregunta?</string>
+    <string name="text_delete_question_more">Esta accion no puede revertirse.</string>
+
+    <string name="text_delete_poll">¿Esta seguro que desea eliminar la encuesta?</string>
+    <string name="text_delete_poll_more">Esta accion no puede revertirse.</string>
+
+    <string name="text_leave_poll_editor">¿Esta seguro que desea abandonar la encuesta?</string>
+    <string name="text_leave_poll_editor_more">Se perderan los cambios realizados.</string>
+
+
+    <string name="text_save_poll">Se guardara la encuesta actual como una nueva encuesta.</string>
+    <string name="text_save_poll_as_new_more">Se guardara la encuesta actual como una nueva encuesta.</string>
+    <string name="text_save_poll_update">La encuesta no ha sido respondida. Se actualizará la encuesta existente.</string>
+
+    <!-- Strings related to Settings -->
+
+    <string name="pref_lang">Idioma</string>
+    <string-array name="pref_lang_list_titles">
+        <item>Español</item>
+        <item>Ingles</item>
+    </string-array>
+    <string-array name="pref_lang_list_values">
+        <item>es</item>
+        <item>en</item>
+    </string-array>
+
+    <!-- Example General settings -->
+    <string name="pref_header_general">General</string>
+
 </resources>

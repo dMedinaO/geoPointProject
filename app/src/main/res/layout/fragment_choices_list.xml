@@ -11,31 +11,45 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/max_choices_view"
+        <CheckBox
+            android:id="@+id/checkbox_limit"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Alternativas seleccionables" />
+            android:text="@string/label_checkbox_choices_limit" />
 
-        <EditText
-            android:id="@+id/max_choices"
+        <LinearLayout
+            android:id="@+id/choices_limit_group"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:ems="10"
-            android:inputType="number"
-            android:text="1"
-            android:textAlignment="center" />
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/max_choices_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Alternativas seleccionables" />
+
+            <EditText
+                android:id="@+id/max_choices"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:inputType="number"
+                android:text="1"
+                android:textAlignment="center" />
+        </LinearLayout>
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Listado de alternativas." />
+            android:text="@string/label_choices_list" />
 
         <Button
             android:id="@+id/btn_add_choice"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Agregar alternativa" />
+            android:text="@string/label_button_add_choice" />
 
         <ListView
             android:id="@+id/choices_list"

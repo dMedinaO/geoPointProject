@@ -16,8 +16,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -47,22 +50,26 @@ public class ChoicesEditorFragment extends QuestionEditorFragment {
 
     @Override
     public boolean validate(){
+        CheckBox checkBox = this.getView().findViewById(R.id.checkbox_limit);
         TextView maxView = this.getView().findViewById(R.id.max_choices);
-        int max = Integer.valueOf(maxView.getText().toString());
+        int max = -1;
+        if (checkBox.isChecked()){
+            max = Integer.valueOf(maxView.getText().toString());
+        }
         String error = null;
 
         if (mAdapter.getCount() == 0){
-            error = "Una pregunta con alternativas debe tener dos alternativas como minimo.\n";
+            error = getString(R.string.text_question_choice_editor_at_least_two_alternatives) + "\n";
         }
         if (mAdapter.getCount() < max){
-            error = "El máximo de alternativas a seleccionar debe ser igual o mayor al número de alternativas ingresadas.\n";
+            error = getString(R.string.text_question_choice_editor_over_max_choices) + "\n";
         }
         if (error != null){
             new AlertDialog.Builder(getContext())
                     .setIcon(android.R.drawable.ic_dialog_alert)
                     .setTitle("Error")
                     .setMessage(error)
-                    .setPositiveButton("Aceptar", new DialogInterface.OnClickListener()
+                    .setPositiveButton(R.string.label_button_accept, new DialogInterface.OnClickListener()
                     {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
@@ -95,7 +102,11 @@ public class ChoicesEditorFragment extends QuestionEditorFragment {
         }
         TextView maxView = this.getView().findViewById(R.id.max_choices);
         map.put("alternatives", alternativesArray);
-        map.put("max", String.valueOf(maxView.getText()));
+
+        CheckBox checkBox = this.getView().findViewById(R.id.checkbox_limit);
+        if (checkBox.isChecked()){
+            map.put("max", String.valueOf(maxView.getText()));
+        }
         return map;
     }
 
@@ -105,7 +116,7 @@ public class ChoicesEditorFragment extends QuestionEditorFragment {
 
     public void addChoice(){
         mAdapter.saveEdit();
-        mAdapter.add(new Choice("Valor", "Texto" + String.valueOf(mAdapter.getCount())));
+        mAdapter.add(new Choice(getString(R.string.default_choice_value), getString(R.string.default_choice_label) + String.valueOf(mAdapter.getCount())));
         setListViewHeightBasedOnChildren(listView);
     }
 
@@ -134,8 +145,14 @@ public class ChoicesEditorFragment extends QuestionEditorFragment {
         super.updateQuestionContent(view);
         JSONArray alternativesArray = null;
         if (options.containsKey("max")){
+            CheckBox checkBox = view.findViewById(R.id.checkbox_limit);
+            checkBox.setChecked(true);
             TextView textView = view.findViewById(R.id.max_choices);
             textView.setText(String.valueOf(options.get("max")));
+        }
+        else{
+            TextView textView = view.findViewById(R.id.max_choices);
+            textView.setText(String.valueOf(1));
         }
 
         if (options.containsKey("alternatives")){
@@ -175,6 +192,22 @@ public class ChoicesEditorFragment extends QuestionEditorFragment {
                 addChoice();
             }
         });
+
+        final LinearLayout linearLayout = view.findViewById(R.id.choices_limit_group);
+        CheckBox checkBox = view.findViewById(R.id.checkbox_limit);
+        checkBox.setOnCheckedChangeListener(new CheckBox.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked){
+                    linearLayout.setVisibility(View.VISIBLE);
+                }
+                else{
+
+                    linearLayout.setVisibility(View.GONE);
+                }
+            }
+        });
+
         updateQuestionContent(view);
         return view;
     }

@@ -40,13 +40,12 @@ public class PolygonActivity extends QuestionActivity {
         mMap = (MapView) findViewById(R.id.map);
         mMap.setTileSource(TileSourceFactory.MAPNIK); // MAPNIK = Openstreemap
 
-        mMap.setBuiltInZoomControls(false);
-        mMap.setMultiTouchControls(true);
+        mMap.setBuiltInZoomControls(true);
 
         // initialize controller
         mMapController = mMap.getController();
         // set zoom and start position
-        mMapController.setZoom(13.0);
+        mMapController.setZoom(17.0);
 
         // set zoom and start position
         GeoPoint startPoint = new GeoPoint(-33.447487, -70.673676);

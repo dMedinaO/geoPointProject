@@ -7,17 +7,29 @@
         android:id="@+id/action_export_responses"
         android:orderInCategory="200"
         android:icon="@drawable/ic_insert_drive_file_black_24dp"
-        android:title="Exportar respuestas"
+        android:title="@string/label_button_export_responses"
         android:iconTint="@android:color/white"
         android:iconTintMode="add"
-        app:showAsAction="always" />
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_export_responses_csv"
+        android:orderInCategory="200"
+        android:icon="@drawable/ic_insert_drive_file_black_24dp"
+        android:title="@string/label_button_export_responses_csv"
+        android:iconTint="@android:color/white"
+        android:iconTintMode="add"
+        app:showAsAction="never" />
+
 
     <item
         android:id="@+id/action_remove_responses"
         android:orderInCategory="200"
         android:icon="@drawable/ic_delete_forever_black_24dp"
-        android:title="Eliminar respuestas"
+        android:title="@string/label_button_delete_responses"
         android:iconTint="@android:color/white"
         android:iconTintMode="add"
-        app:showAsAction="always" />
+        app:showAsAction="never"/>
+
+
 </menu>

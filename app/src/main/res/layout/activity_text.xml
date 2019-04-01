@@ -58,7 +58,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:onClick="clean"
-                    android:text="Borrar todo" />
+                    android:text="@string/label_button_clean_response" />
 
                 <Button
                     android:id="@+id/save"
@@ -66,7 +66,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:onClick="saveResponse"
-                    android:text="Guardar" />
+                    android:text="@string/label_button_save_response" />
             </LinearLayout>
 
         </LinearLayout>
