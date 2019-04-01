@@ -51,10 +51,11 @@ public class PointPlusEditorFragment extends QuestionEditorFragment {
     public boolean validate(){
         String error = "";
         currentFragment.validate();
-        if (mPointsOverlay.markers.size() == 0){
-            error = "Debe ingresar los puntos entre los cuales el encuestado seleccionara uno.";
+        if (mPointsOverlay.marker == null){
+            error = "Debe seleccionar el punto en donde se centrará el mapa mientras se contesta la pregunta.";
         }
-        if (error.length() > 0){
+
+        if (!error.equals("")){
             new AlertDialog.Builder(getContext())
                     .setIcon(android.R.drawable.ic_dialog_alert)
                     .setTitle("Error")
@@ -75,16 +76,16 @@ public class PointPlusEditorFragment extends QuestionEditorFragment {
 
     public Map<String, Object> getOptions(){
         Map<String, Object> map = new HashMap<String, Object>();
-        JSONArray markersArray = new JSONArray();
-        for (Marker marker : mPointsOverlay.markers){
-            JSONObject point = new JSONObject();
+        JSONObject centerAt = new JSONObject();
+        if(mPointsOverlay.marker != null){
             try {
-                point.put("latitude", marker.getPosition().getLatitude());
-                point.put("longitude", marker.getPosition().getLongitude());
-                markersArray.put(point);
+                centerAt.put("latitude", String.valueOf(mPointsOverlay.marker.getPosition().getLatitude()));
+                centerAt.put("longitude", String.valueOf(mPointsOverlay.marker.getPosition().getLongitude()));
             } catch (JSONException e) {
                 e.printStackTrace();
             }
+
+            map.put("center", centerAt);
         }
 
         Map<String, Object> secOptions = currentFragment.getOptions();
@@ -95,7 +96,6 @@ public class PointPlusEditorFragment extends QuestionEditorFragment {
         secQuestion.setTitle(secTitle.getText().toString());
         secQuestion.setDescription(secDescription.getText().toString());
 
-        map.put("points", markersArray);
         try {
             map.put("question", new JSONObject(secQuestion.toJson()));
         } catch (JSONException e) {
@@ -108,14 +108,12 @@ public class PointPlusEditorFragment extends QuestionEditorFragment {
     @Override
     public void updateQuestionContent(View view){
         super.updateQuestionContent(view);
-        if (options.containsKey("points")){
+        if (options.containsKey("center")){
             try {
-                JSONArray jsonArray = (JSONArray) options.get("points");
-                for (int i=0; i<jsonArray.length(); i++){
-                    JSONObject jsonObject = jsonArray.getJSONObject(i);
-                    GeoPoint point = new GeoPoint(jsonObject.getDouble("latitude"), jsonObject.getDouble("longitude"));
-                    mPointsOverlay.addMarker(mMap, point);
-                }
+                JSONObject center = new JSONObject(options.get("center").toString());
+                GeoPoint point = new GeoPoint(center.getDouble("latitude"), center.getDouble("longitude"));
+                mPointsOverlay.addMarker(mMap, point);
+                mMapController.animateTo(point);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -182,9 +180,9 @@ public class PointPlusEditorFragment extends QuestionEditorFragment {
                 "choice"
         }));
         for (Object entry : entries){
-            Map.Entry map = (Map.Entry<String,String>) entry;
+            Map.Entry map = (Map.Entry<String,Integer>) entry;
             if (supportedQuestionTypes.contains(map.getKey())){
-                types.add((String) map.getValue());
+                types.add(getString((Integer) map.getValue()));
             }
             else{
                 keys.remove(map.getKey().toString());
@@ -251,60 +249,34 @@ public class PointPlusEditorFragment extends QuestionEditorFragment {
     }
 
     class DrawPointOverlay extends MyLocationNewOverlay {
-        ArrayList<Marker> markers;
+        GeoPoint point;
+        Marker marker;
 
 
         public DrawPointOverlay(MapView mapView) {
             super(mapView);
-            markers = new ArrayList<>();
         }
 
         public void cleanPoints(MapView map){
             map.invalidate();
         }
 
-        public void addMarker(MapView mapview, final GeoPoint position){
-            Marker marker = new Marker(mapview);
-
-            marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+        public void addMarker(MapView mapview, GeoPoint position){
+            if (marker == null){
+                marker = new Marker(mapview);
+                marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+                mapview.getOverlayManager().add(marker);
+            }
             marker.setPosition(position);
-            mapview.getOverlayManager().add(marker);
-            marker.setPosition(position);
-            marker.setOnMarkerClickListener(new Marker.OnMarkerClickListener() {
-                @Override
-                public boolean onMarkerClick(final Marker marker, final MapView mapView) {
-                    new AlertDialog.Builder(getContext())
-                        .setIcon(android.R.drawable.ic_dialog_alert)
-                        .setTitle("¿Desea eliminar el punto seleccionado?")
-                        .setMessage("Esta accion no puede revertirse.")
-                        .setNegativeButton("Cancelar", new DialogInterface.OnClickListener()
-                        {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-
-                            }
-                        })
-                        .setPositiveButton("Eliminar", new DialogInterface.OnClickListener()
-                        {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                            markers.remove(marker);
-                            mapView.getOverlayManager().remove(marker);
-                            mapView.invalidate();
-                            }
-                        })
-                        .show();
-                    return false;
-                }
-            });
-            this.markers.add(marker);
         }
 
         @Override
-        public boolean onDoubleTap(MotionEvent e, MapView mapview){
+        public boolean onDoubleTap(MotionEvent e, MapView mapview) {
             Projection projection = mapview.getProjection();
-            GeoPoint position = (GeoPoint) projection.fromPixels((int)e.getX(), (int)e.getY());
-            addMarker(mapview, position);
+            point = (GeoPoint) projection.fromPixels((int)e.getX(), (int)e.getY());
+            addMarker(mapview, point);
+
+            mMapController.animateTo(point);
             mapview.invalidate();
             return true;
         }

@@ -74,14 +74,14 @@ public class PollEditorActivity extends CustomActivity {
     Context mContext;
     Poll poll = new Poll();
 
-    static final public HashMap QUESTION_TYPE_LIST = new HashMap<String, String>(){{
-        put("choice", "Selección múltiple");
-        put("text", "Ingresar texto");
-        put("route", "Dibujar ruta");
-        put("polygon", "Dibujar polígono");
-        put("range", "Ingresar número entre rango");
-        put("point", "Ingresar punto");
-        put("point+", "Seleccionar punto y pregunta");
+    static final public HashMap QUESTION_TYPE_LIST = new HashMap<String, Integer>(){{
+        put("choice", R.string.label_type_question_choice);
+        put("text", R.string.label_type_question_text);
+        put("route", R.string.label_type_question_route);
+        put("polygon", R.string.label_type_question_polygon);
+        put("range", R.string.label_type_question_range);
+        put("point", R.string.label_type_question_point);
+        put("point+", R.string.label_type_question_pointplus);
 
         // put("point", "Puntos en mapa");
     }};
@@ -276,6 +276,10 @@ public class PollEditorActivity extends CustomActivity {
     }
 
     private boolean pollHasAnswers(String pollId) {
+        if (pollId == null){
+            return true;
+        }
+
         ResponseDbHelper mDbHelper = new ResponseDbHelper(getApplicationContext());
         SQLiteDatabase db = mDbHelper.getWritableDatabase();
 
@@ -440,14 +444,8 @@ public class PollEditorActivity extends CustomActivity {
             View listItem = convertView;
             if(listItem == null) {
                 listItem = LayoutInflater.from(mContext).inflate(R.layout.listview_new_question, parent, false);
-                Log.i("TST ENCUESTA: ", "INFLATE");
             }
-
-            Log.i("TST ENCUESTA: ", String.valueOf(position));
-
             final Question currentQuestion = questionList.get(position);
-
-            Log.i("TST ENCUESTA: ", currentQuestion.toJson());
 
             currentQuestion.setNumber(position);
             TextView number = (TextView) listItem.findViewById(R.id.question_number);
@@ -457,10 +455,7 @@ public class PollEditorActivity extends CustomActivity {
             titleView.setText(currentQuestion.getTitle());
 
             TextView typeView = (TextView) listItem.findViewById(R.id.question_type);
-            typeView.setText(QUESTION_TYPE_LIST.get(currentQuestion.getType()).toString());
-
-            Log.i("TST ENCUESTA: ", listView.toString());
-
+            typeView.setText(getString((Integer)QUESTION_TYPE_LIST.get(currentQuestion.getType())));
             return listItem;
         }
     }

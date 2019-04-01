@@ -86,8 +86,8 @@ public class QuestionEditorActivity extends AppCompatActivity{
         Object[] entries = entriesSet.toArray();
 
         for (Object entry : entries){
-            Map.Entry map = (Map.Entry<String,String>) entry;
-            types.add((String) map.getValue());
+            Map.Entry map = (Map.Entry<String, Integer>) entry;
+            types.add(getString((Integer) map.getValue()));
         }
 
         Spinner typeSpinner = (Spinner) findViewById(R.id.spinner_question_type);
@@ -148,6 +148,8 @@ public class QuestionEditorActivity extends AppCompatActivity{
                 break;
             case "route":
             case "polygon":
+                currentFragment = new RouteEditorFragment();
+                break;
             case "point":
                 currentFragment = new RouteEditorFragment();
                 break;

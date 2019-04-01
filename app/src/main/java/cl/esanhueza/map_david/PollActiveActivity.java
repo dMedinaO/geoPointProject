@@ -64,7 +64,7 @@ import cl.esanhueza.map_david.storage.ResponseDbHelper;
 
 public class PollActiveActivity extends CustomActivity {
     static final public HashMap QUESTION_TYPE_LIST = new HashMap<String, java.lang.Class>() {{
-        put("polygon", PolygonActivity.class);
+        put("polygon", NewPolygonActivity.class);
         put("route", RouteActivity.class);
         put("text", TextActivity.class);
         put("choice", MultipleChoiceActivity.class);
@@ -259,7 +259,7 @@ public class PollActiveActivity extends CustomActivity {
             try {
                 JSONObject result = new JSONObject(returnedResult);
 
-                Toast.makeText(this, returnedResult, Toast.LENGTH_LONG).show();
+                //Toast.makeText(this, returnedResult, Toast.LENGTH_LONG).show();
                 Question q = findQuestionByNumber(requestCode);
                 if (q != null) {
                     q.setState("Contestada");

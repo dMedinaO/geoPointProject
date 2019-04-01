@@ -1,14 +1,17 @@
 package cl.esanhueza.map_david;
 
 import android.app.Activity;
+import android.app.FragmentManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -22,7 +25,6 @@ import org.osmdroid.views.MapView;
 import org.osmdroid.views.Projection;
 import org.osmdroid.views.overlay.ItemizedIconOverlay;
 import org.osmdroid.views.overlay.ItemizedOverlayWithFocus;
-import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.OverlayItem;
 import org.osmdroid.views.overlay.Polyline;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
@@ -30,25 +32,36 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PointActivity extends QuestionActivity {
+import cl.esanhueza.map_david.Util.CustomPaintingSurface;
+import cl.esanhueza.map_david.Util.LockableScrollView;
+
+import static cl.esanhueza.map_david.R.id.fragment_map;
+
+public class NewPolygonActivity extends QuestionActivity implements DrawLineFragment.EventListener{
     MapView mMap;
     IMapController mMapController;
-    DrawPointOverlay mPointsOverlay;
-    int maxPoints = 1;
-    Context mContext;
 
     public void setContent(){
-        mContext = getApplicationContext();
-        mMap = (MapView) findViewById(R.id.map);
+        DrawLineFragment drawLineFragment = (DrawLineFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_map);
+        drawLineFragment.paint.setMode(CustomPaintingSurface.Mode.Polygon);
+        LockableScrollView lockableScrollView = findViewById(R.id.scroll);
+        if (lockableScrollView != null){
+            lockableScrollView.setScrollingEnabled(true);
+        }
+
+        mMap = (MapView) findViewById(R.id.mapview);
         mMap.setTileSource(TileSourceFactory.MAPNIK); // MAPNIK = Openstreemap
 
         mMap.setBuiltInZoomControls(true);
 
         // initialize controller
         mMapController = mMap.getController();
+        mMapController.setZoom(17.0);
 
         // set zoom and start position
-        mMapController.setZoom(17.0);
+        if (question.getOptions().containsKey("zoom")){
+            mMapController.setZoom(Double.valueOf(question.getOptions().get("zoom").toString()));
+        }
 
         GeoPoint startPoint = new GeoPoint(-33.447487, -70.673676);
         if(currentPosition != null){
@@ -63,27 +76,25 @@ public class PointActivity extends QuestionActivity {
                 e.printStackTrace();
             }
         }
+
         if (question.getOptions().containsKey("zoom")){
             mMapController.setZoom(Double.valueOf(question.getOptions().get("zoom").toString()));
         }
 
-        if (question.getOptions().containsKey("max")){
-            maxPoints = Integer.valueOf(question.getOptions().get("max").toString());
-        }
-
         mMapController.setCenter(startPoint);
-
-        mPointsOverlay = new DrawPointOverlay(mMap);
-        mMap.getOverlays().add(mPointsOverlay);
 
         if(response != null){
             try {
                 JSONArray array = response.getJSONArray("value");
+                ArrayList<GeoPoint> points = new ArrayList<>();
                 for (int i=0; i<array.length(); i++){
                     JSONObject obj = array.getJSONObject(i);
                     GeoPoint p = new GeoPoint(obj.getDouble("latitude"), obj.getDouble("longitude"));
-                    mPointsOverlay.addPoint(p);
+                    //mPointsOverlay.addPoint(p, mMap);
+                    points.add(p);
                 }
+                drawLineFragment.setPoints(points);
+                mMap.invalidate();
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -91,37 +102,46 @@ public class PointActivity extends QuestionActivity {
     }
 
     public int getContentViewId(){
-        return R.layout.activity_point;
+        return R.layout.activity_route;
     };
 
     public void cleanMap(View view){
-        this.mPointsOverlay.cleanPoints(mMap);
+        //this.mPointsOverlay.cleanPoints(mMap);
+        DrawLineFragment drawLineFragment = (DrawLineFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_map);
+        drawLineFragment.clearPoints();
     }
 
     public void saveResponse(View view){
+        DrawLineFragment drawLineFragment = (DrawLineFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_map);
+
         Intent intent = new Intent();
+        List<GeoPoint> points = drawLineFragment.getPoints();
 
-
-        if (mPointsOverlay.points.size() == 0){
-            Toast.makeText(this, R.string.text_question_point_editor_must_add_points, Toast.LENGTH_LONG).show();
+        if (points == null || points.size() < 2){
+            Toast.makeText(this, R.string.text_question_route_min_points, Toast.LENGTH_LONG).show();
             return;
         }
 
-        JSONObject result = new JSONObject();
         JSONArray array = new JSONArray();
-        try {
-            for (int i=0; i<mPointsOverlay.points.size(); i++){
-                JSONObject obj = new JSONObject();
-                obj.put("latitude", mPointsOverlay.points.get(i).getPosition().getLatitude());
-                obj.put("longitude", mPointsOverlay.points.get(i).getPosition().getLongitude());
-                array.put(obj);
+
+        for (GeoPoint p : points){
+            JSONObject obj = new JSONObject();
+            try {
+                obj.put("latitude", p.getLatitude());
+                obj.put("longitude", p.getLongitude());
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
-            result.put("value", array);
+            array.put(obj);
+        }
+
+        JSONObject response = new JSONObject();
+        try {
+            response.put("value", array);
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
-        intent.setData(Uri.parse(result.toString()));
+        intent.setData(Uri.parse(response.toString()));
         setResult(Activity.RESULT_OK, intent);
         finish();
     }
@@ -136,54 +156,41 @@ public class PointActivity extends QuestionActivity {
         mMap.onPause();  //needed for compass, my location overlays, v6.0.0 and up
     }
 
-    class DrawPointOverlay extends MyLocationNewOverlay{
-        ArrayList<Marker> points;
 
-        public DrawPointOverlay (MapView mapView) {
-            super(mapView);
-            points = new ArrayList<>();
+    @Override
+    public void toggleScroll(boolean toggle) {
+        LockableScrollView lockableScrollView = findViewById(R.id.scroll);
+        if (lockableScrollView != null){
+            lockableScrollView.setScrollingEnabled(toggle);
         }
+    }
 
-        public void deletePoint(Marker m){
-            points.remove(m);
-            m.remove(mMapView);
-            mMap.invalidate();
+    class DrawLineOverlay extends MyLocationNewOverlay{
+        Polyline figure;
+
+
+        public DrawLineOverlay (MapView mapView) {
+            super(mapView);
+            figure = new Polyline();
+            figure.getPaint().setARGB(200, 63,81,181);
+            figure.getPaint().setStrokeCap(Paint.Cap.ROUND);
+            mapView.getOverlayManager().add(figure);
         }
 
         public void cleanPoints(MapView map){
-            for (Marker m : points){
-                m.remove(map);
-            }
-            points.clear();
+            figure.setPoints(new ArrayList<GeoPoint>());
             map.invalidate();
         }
 
-        public void addPoint(GeoPoint p){
-            if (points.size() >= maxPoints){
-                Toast.makeText(mContext, getString(R.string.text_question_point_over_max_points) + " (" + String.valueOf(maxPoints) +" puntos)", Toast.LENGTH_LONG).show();
-                return;
-            }
-
-            Marker m = new Marker(this.mMapView);
-            m.setPosition(p);
-            m.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
-            m.setOnMarkerClickListener(new Marker.OnMarkerClickListener() {
-
-                @Override
-                public boolean onMarkerClick(Marker marker, MapView mapView) {
-                    deletePoint(marker);
-                    return false;
-                }
-            });
-            points.add(m);
-            this.mMapView.getOverlayManager().add(m);
+        public void addPoint(GeoPoint pos, MapView map){
+            figure.addPoint(pos);
         }
 
         @Override
         public boolean onDoubleTap(MotionEvent e, MapView map) {
             Projection projection = map.getProjection();
             GeoPoint geoPoint = (GeoPoint) projection.fromPixels((int)e.getX(), (int)e.getY());
-            addPoint(geoPoint);
+            figure.addPoint(geoPoint);
             map.invalidate();
             return true;
         }

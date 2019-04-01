@@ -62,7 +62,7 @@ public class PollDetailsActivity extends CustomActivity {
 
         poll = PollFileStorageHelper.readPoll(pollString);
 
-        setTitle("Detalle de la encuesta");
+        setTitle(R.string.text_poll_details);
         TextView viewTitle = findViewById(R.id.polltitle);
         viewTitle.setText(poll.getTitle());
 
@@ -105,14 +105,14 @@ public class PollDetailsActivity extends CustomActivity {
             case R.id.action_remove_responses:
                 new AlertDialog.Builder(PollDetailsActivity.this)
                         .setIcon(android.R.drawable.ic_dialog_alert)
-                        .setTitle("¿Esta seguro que desea eliminar las respuestas?")
-                        .setMessage("Las respuestas no podran ser recuperadas.")
-                        .setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
+                        .setTitle(R.string.text_poll_delete_responses)
+                        .setMessage(R.string.text_poll_delete_responses_more)
+                        .setNegativeButton(R.string.label_button_cancel, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                             }
                         })
-                        .setPositiveButton("Eliminar", new DialogInterface.OnClickListener() {
+                        .setPositiveButton(R.string.label_button_accept, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 removeResponsesFromDb();
@@ -144,17 +144,17 @@ public class PollDetailsActivity extends CustomActivity {
     private void restartPoll(final String personId){
         new AlertDialog.Builder(PollDetailsActivity.this)
                 .setIcon(android.R.drawable.ic_dialog_alert)
-                .setTitle("Recuperar encuesta")
-                .setMessage("Una encuesta terminó inesperadamente, ¿desea recuperar el progreso?")
+                .setTitle(R.string.text_poll_recovery)
+                .setMessage(R.string.text_poll_recovery_more)
                 .setCancelable(false)
-                .setNegativeButton("Eliminar", new DialogInterface.OnClickListener() {
+                .setNegativeButton(R.string.label_button_delete, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         removePollNotCompleted(personId);
                         loadStats();
                     }
                 })
-                .setPositiveButton("Recuperar", new DialogInterface.OnClickListener() {
+                .setPositiveButton(R.string.label_button_recover, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         startPoll(personId);
@@ -255,7 +255,6 @@ public class PollDetailsActivity extends CustomActivity {
 
     /* Agrega las respuesta de una persona al archivo con las respuestas */
     private void exportResponse(String personId) {
-        Log.d("TST ENCUESTAS: ", "(exportResponse) Exportando respuesta de persona: " + personId);
         SQLiteDatabase db = mDbHelper.getReadableDatabase();
 
         Cursor personsCursor = db.query(PersonContract.PersonEntry.TABLE_NAME,

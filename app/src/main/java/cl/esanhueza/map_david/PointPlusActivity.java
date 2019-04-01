@@ -17,6 +17,7 @@ import org.osmdroid.api.IMapController;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
+import org.osmdroid.views.Projection;
 import org.osmdroid.views.overlay.ItemizedIconOverlay;
 import org.osmdroid.views.overlay.ItemizedOverlayWithFocus;
 import org.osmdroid.views.overlay.Marker;
@@ -51,6 +52,22 @@ public class PointPlusActivity extends QuestionActivity {
         mMapController = mMap.getController();
         // set zoom and start position
         mMapController.setZoom(17.0);
+
+        GeoPoint startPoint = new GeoPoint(-33.447487, -70.673676);
+        if(currentPosition != null){
+            startPoint = currentPosition;
+        }
+        else if (question.getOptions().containsKey("center")){
+            try {
+                JSONObject centerJson = new JSONObject(question.getOptions().get("center").toString());
+                startPoint.setLatitude(centerJson.getDouble("latitude"));
+                startPoint.setLongitude(centerJson.getDouble("longitude"));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        mMapController.setCenter(startPoint);
 
         mPointsOverlay = new DrawPointOverlay(mMap);
         mMap.getOverlays().add(mPointsOverlay);
@@ -144,51 +161,43 @@ public class PointPlusActivity extends QuestionActivity {
     }
 
     class DrawPointOverlay extends MyLocationNewOverlay{
+        Marker m;
+
         public DrawPointOverlay (MapView mapView) {
             super(mapView);
-            Map<String, Object> opts = question.getOptions();
-            JSONArray arr;
-            try {
-                arr = (JSONArray) opts.get("points");
-                for (int i = 0; i < arr.length(); i++){
-                    Marker m = addMarker(mapView);
-                    JSONObject obj = (JSONObject) arr.get(i);
-                    GeoPoint gp = new GeoPoint(obj.getDouble("latitude"), obj.getDouble("longitude"));
-                    m.setPosition(gp);
-                }
-                if (arr.length() > 0){
-                    JSONObject obj = (JSONObject) arr.get(0);
-                    GeoPoint gp = new GeoPoint(obj.getDouble("latitude"), obj.getDouble("longitude"));
-                    mMapController.setCenter(gp);
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-
-        public Marker addMarker(MapView mapview){
-            Marker marker = new Marker(mapview);
-            marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
-            marker.setOnMarkerClickListener(new Marker.OnMarkerClickListener() {
-                @Override
-                public boolean onMarkerClick(Marker marker, MapView mapView) {
-                    pointSelected = marker.getPosition();
-                    openQuestion();
-                    return false;
-                }
-            });
-            mapview.getOverlayManager().add(marker);
-            return marker;
         }
 
         public void cleanPoints(MapView map){
-            map.getOverlayManager().clear();
+            m.remove(map);
+            m = null;
+            pointSelected = null;
             map.invalidate();
+        }
+
+        public void addPoint(GeoPoint p){
+            if(m!=null){
+                m.remove(this.mMapView);
+            }
+            m = new Marker(this.mMapView);
+            m.setPosition(p);
+            m.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+            pointSelected = m.getPosition();
+            this.mMapView.getOverlayManager().add(m);
+        }
+
+        @Override
+        public boolean onDoubleTap(MotionEvent e, MapView map) {
+            Projection projection = map.getProjection();
+            GeoPoint geoPoint = (GeoPoint) projection.fromPixels((int)e.getX(), (int)e.getY());
+            addPoint(geoPoint);
+            openQuestion();
+            map.invalidate();
+            return true;
         }
 
         @Override
         public boolean onLongPress(MotionEvent e, MapView map) {
-            //this.cleanPoints(map);
+            this.cleanPoints(map);
             return true;
         }
     }

@@ -9,11 +9,14 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Point;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
 
+import org.osmdroid.api.IGeoPoint;
 import org.osmdroid.util.GeoPoint;
+import org.osmdroid.util.PointL;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.Projection;
 import org.osmdroid.views.overlay.Overlay;
@@ -41,7 +44,7 @@ public class CustomPaintingSurface extends View {
         this.drawingMode=mode;
     }
     private CustomPaintingSurface.Mode drawingMode= CustomPaintingSurface.Mode.Polyline;
-
+    private Point firstPoint = null;
     public enum Mode{
         Polyline,
         Polygon,
@@ -57,6 +60,7 @@ public class CustomPaintingSurface extends View {
     private float mX, mY;
     private static final float TOUCH_TOLERANCE = 4;
     private Overlay lastOverlay;
+
 
     transient Polygon lastPolygon=null;
 
@@ -110,7 +114,17 @@ public class CustomPaintingSurface extends View {
         }
     }
     public void clear(){
-        map.getOverlayManager().clear();
+        if (lastOverlay != null){
+            map.getOverlayManager().remove(lastOverlay);
+
+        }
+        if (lastPolygon != null){
+            map.getOverlayManager().remove(lastPolygon);
+        }
+
+        firstPoint = null;
+        lastOverlay = null;
+        lastPolygon = null;
         map.invalidate();
     }
 
@@ -118,6 +132,10 @@ public class CustomPaintingSurface extends View {
         if (drawingMode == Mode.Polyline){
             Polyline polyline = (Polyline) lastOverlay;
             return polyline.getPoints();
+        }
+        else if (drawingMode == Mode.Polygon){
+            Polygon p = lastPolygon;
+            return new ArrayList<>(p.getPoints());
         }
         return null;
     }
@@ -129,6 +147,14 @@ public class CustomPaintingSurface extends View {
             map.getOverlayManager().add(polyline);
             lastOverlay = polyline;
         }
+        else if (drawingMode == Mode.Polygon){
+            Polygon p = new Polygon(map);
+            p.setPoints(points);
+            map.getOverlayManager().add(p);
+            p.setFillColor(Color.argb(75, 255,0,0));
+            lastPolygon = p;
+        }
+        map.invalidate();
     }
 
 
@@ -138,6 +164,7 @@ public class CustomPaintingSurface extends View {
         mCanvas.drawPath(mPath, mPaint);
         // kill this so we don't double draw
         mPath.reset();
+        boolean forceLineDrawing = false;
         if (map!=null){
             Projection projection = map.getProjection();
             ArrayList<GeoPoint> geoPoints = new ArrayList<>();
@@ -147,9 +174,13 @@ public class CustomPaintingSurface extends View {
                 GeoPoint iGeoPoint = (GeoPoint) projection.fromPixels(unrotatedPoint.x, unrotatedPoint.y);
                 geoPoints.add(iGeoPoint);
             }
+
             //geoPoints = PointReducer.reduceWithTolerance(geoPoints, 1.0);
             //TODO run the douglas pucker algorithm to reduce the points for performance reasons
             if (geoPoints.size() > 2) {
+                if (firstPoint == null){
+                    firstPoint = pts.get(0);
+                }
                 //only plot a line unless there's at least one item
                 switch (drawingMode) {
                     case Polyline:
@@ -158,35 +189,7 @@ public class CustomPaintingSurface extends View {
                         line.setColor(color);
                         line.setPoints(geoPoints);
                         line.getPaint().setStrokeCap(Paint.Cap.ROUND);
-                        //example below
-                        /*
-                        line.setOnClickListener(new Polyline.OnClickListener() {
-                            @Override
-                            public boolean onClick(Polyline polyline, MapView mapView, GeoPoint eventPos) {
-                                Toast.makeText(mapView.getContext(), "polyline with " + polyline.getPoints().size() + "pts was tapped", Toast.LENGTH_LONG).show();
-                                return false;
-                            }
-                        });
-                        */
 
-                        if (withArrows) {
-                            final Paint arrowPaint = new Paint();
-                            arrowPaint.setColor(color);
-                            arrowPaint.setStrokeWidth(10.0f);
-                            arrowPaint.setStyle(Paint.Style.FILL_AND_STROKE);
-                            arrowPaint.setAntiAlias(true);
-                            final Path arrowPath = new Path(); // a simple arrow towards the right
-                            arrowPath.moveTo(- 10, - 10);
-                            arrowPath.lineTo(10, 0);
-                            arrowPath.lineTo(- 10, 10);
-                            arrowPath.close();
-                            final List<MilestoneManager> managers = new ArrayList<>();
-                            managers.add(new MilestoneManager(
-                                    new MilestonePixelDistanceLister(50, 50),
-                                    new MilestonePathDisplayer(0, true, arrowPath, arrowPaint)
-                            ));
-                            line.setMilestoneManagers(managers);
-                        }
                         if (lastOverlay != null){
                             map.getOverlayManager().remove(lastOverlay);
                         }
@@ -195,31 +198,56 @@ public class CustomPaintingSurface extends View {
                         lastPolygon=null;
                         break;
                     case Polygon:
-                        Polygon polygon = new Polygon(map);
-                        polygon.setInfoWindow(
-                                new BasicInfoWindow(org.osmdroid.library.R.layout.bonuspack_bubble, map));
-                        polygon.setFillColor(Color.argb(75, 255,0,0));
-                        polygon.setPoints(geoPoints);
-                        if (withArrows) {
-                            final Bitmap bitmap = BitmapFactory.decodeResource(getResources(), org.osmdroid.library.R.drawable.center); // round_navigation_white_48
-                            final List<MilestoneManager> managers = new ArrayList<>();
-                            managers.add(new MilestoneManager(
-                                    new MilestonePixelDistanceLister(20, 200),
-                                    new MilestoneBitmapDisplayer(90, true, bitmap, bitmap.getWidth() / 2, bitmap.getHeight() / 2)
-                            ));
-                            polygon.setMilestoneManagers(managers);
-                        }
-                        polygon.setOnClickListener(new Polygon.OnClickListener() {
-                            @Override
-                            public boolean onClick(Polygon polygon, MapView mapView, GeoPoint eventPos) {
-                                lastPolygon = polygon;
-                                polygon.onClickDefault(polygon, mapView, eventPos);
-                                Toast.makeText(mapView.getContext(), "polygon with " + polygon.getPoints().size() + "pts was tapped", Toast.LENGTH_LONG).show();
-                                return false;
+                        Log.d("TST ENCUSETAS: ", "lastPolygon != NULL : " + String.valueOf(lastPolygon != null));
+                        if (lastPolygon == null){
+                            Point last = projection.unrotateAndScalePoint(pts.get(pts.size()-1).x, pts.get(pts.size()-1).y, null);
+                            Log.d("TST ESCUNESTAS: ", String.valueOf(Math.pow(firstPoint.x - last.x, 2.0) + Math.pow(firstPoint.y - last.y, 2) > Math.pow(100.0, 2)));
+                            if (Math.pow(firstPoint.x - last.x, 2.0) + Math.pow(firstPoint.y - last.y, 2) > Math.pow(100.0, 2)){
+                                forceLineDrawing = true;
                             }
-                        });
-                        map.getOverlayManager().add(polygon);
-                        lastPolygon=polygon;
+
+                            if (forceLineDrawing){
+                                int colorPolygon = Color.BLACK;
+                                Polyline linePolygon;
+                                if (lastOverlay != null){
+                                    linePolygon = (Polyline) lastOverlay;
+                                    for (GeoPoint p : geoPoints){
+                                        linePolygon.addPoint(p);
+                                    }
+                                }
+                                else{
+                                    linePolygon = new Polyline(map);
+                                    linePolygon.setPoints(geoPoints);
+                                }
+                                linePolygon.setColor(colorPolygon);
+                                linePolygon.getPaint().setStrokeCap(Paint.Cap.ROUND);
+
+                                if (lastOverlay != null){
+                                    map.getOverlayManager().remove(lastOverlay);
+                                }
+                                lastOverlay = linePolygon;
+                                map.getOverlayManager().add(lastOverlay);
+                                lastPolygon=null;
+                            }
+                            else{
+                                List<GeoPoint> p = geoPoints;
+                                if (lastOverlay != null){
+                                    p = ((Polyline) lastOverlay).getPoints();
+                                    p.addAll(geoPoints);
+                                }
+                                else if (lastPolygon != null){
+                                    p = lastPolygon.getPoints();
+                                    p.addAll(geoPoints);
+                                }
+                                Polygon polygon = new Polygon(map);
+                                polygon.setFillColor(Color.argb(75, 255,0,0));
+                                polygon.setPoints(p);
+                                map.getOverlayManager().remove(lastPolygon);
+                                lastPolygon=polygon;
+                                map.getOverlayManager().add(lastPolygon);
+                            }
+                        }
+
                         break;
                     case PolygonHole:
                         if (lastPolygon!=null) {

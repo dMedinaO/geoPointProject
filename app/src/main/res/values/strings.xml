@@ -28,7 +28,7 @@
     <string name="label_button_clean_response">Borrar todo</string>
     <string name="label_button_save_response">Guardar</string>
 
-    <string name="help_question_point">Doble click sobre el mapa para agregar un punto.</string>
+    <string name="help_question_point">Doble click sobre el mapa para agregar un punto. Presione sobre un punto para eliminarlo.</string>
     <string name="help_question_polygon">Doble click sobre el mapa para agregar un punto.</string>
     <string name="help_question_route">Presione el botón a continuación y luego dibuje la ruta. Para terminar vuelva a presionar el botón.</string>
 
@@ -66,6 +66,8 @@
     <string name="text_poll_incomplete">¿Esta seguro que desea abandonar esta encuesta? Se perdera el progreso.</string>
     <string name="text_poll_leave_poll">Abandonar</string>
     <string name="label_button_cancel">Cancelar</string>
+    <string name="label_button_delete">Eliminar</string>
+    <string name="label_button_recover">Recuperar</string>
 
     <string name="text_question_choice_editor_over_max_choices">El máximo de alternativas a seleccionar debe ser igual o mayor al número de alternativas ingresadas.</string>
     <string name="text_question_choice_editor_at_least_two_alternatives">Una pregunta con alternativas debe tener dos alternativas como mínimo.</string>
@@ -96,6 +98,22 @@
     <string name="text_save_poll_as_new_more">Se guardara la encuesta actual como una nueva encuesta.</string>
     <string name="text_save_poll_update">La encuesta no ha sido respondida. Se actualizará la encuesta existente.</string>
 
+    <string name="label_type_question_choice">Selección múltiple</string>
+    <string name="label_type_question_text">Solicitar texto</string>
+    <string name="label_type_question_route">Dibujar ruta</string>
+    <string name="label_type_question_polygon">Dibujar polígono</string>
+    <string name="label_type_question_point">Dibujar puntos</string>
+    <string name="label_type_question_pointplus">Dibujar punto y realizar pregunta</string>
+    <string name="label_type_question_range">Ingresar número entre rango</string>
+
+    <string name="text_poll_details">Detalle de la encuesta</string>
+    <string name="text_poll_delete_responses">¿Esta seguro que desea eliminar las respuestas?</string>
+    <string name="text_poll_delete_responses_more">Las respuestas no podran ser recuperadas.</string>
+
+    <string name="text_poll_recovery">Recuperar encuesta</string>
+    <string name="text_poll_recovery_more">Una encuesta terminó inesperadamente, ¿desea recuperar el progreso?</string>
+
+    <string name="text_question_point_over_max_points">Ya alcanzo el máximo de puntos.</string>
     <!-- Strings related to Settings -->
 
     <string name="pref_lang">Idioma</string>

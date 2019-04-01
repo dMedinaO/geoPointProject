@@ -61,6 +61,10 @@
             android:label="@string/title_activity_route"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
+            android:name=".NewPolygonActivity"
+            android:label="@string/title_activity_route"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
             android:name=".PointPlusActivity"
             android:label="@string/title_activity_route"
             android:theme="@style/AppTheme.NoActionBar" />
