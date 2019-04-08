@@ -7,12 +7,14 @@
     tools:context=".PointActivity">
 
     <ScrollView
+        android:fillViewport="true"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_gravity="fill_vertical|clip_vertical"
             android:orientation="vertical"
             android:paddingBottom="22dp"
             android:paddingLeft="16dp"
@@ -23,6 +25,8 @@
                 android:id="@+id/questiontitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:layout_weight="0"
                 android:text=""
                 android:textAppearance="@android:style/TextAppearance.Material.Headline" />
 
@@ -30,6 +34,8 @@
                 android:id="@+id/questiondescription"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:layout_weight="0"
                 android:text=""
                 android:textAppearance="@android:style/TextAppearance.Material.Medium" />
 
@@ -37,20 +43,27 @@
                 android:id="@+id/questionimage"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:layout_marginTop="16dp"
+                android:adjustViewBounds="true"
+                android:scaleType="fitXY"
                 app:srcCompat="@drawable/ic_check_box_outline_blank_black_24dp" />
 
             <TextView
                 android:id="@+id/questionhelp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_weight="0"
                 android:text="@string/help_question_point"
                 android:textAppearance="@android:style/TextAppearance.Material.Small" />
 
             <org.osmdroid.views.MapView
                 android:id="@+id/map"
                 android:layout_width="match_parent"
-                android:layout_height="400dp"
-                android:layout_marginTop="12dp">
+                android:layout_height="0dp"
+                android:layout_marginTop="12dp"
+                android:layout_weight="1"
+                android:minHeight="400dp">
 
 
             </org.osmdroid.views.MapView>
@@ -59,6 +72,7 @@
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_weight="0"
                 android:orientation="horizontal">
 
                 <Button

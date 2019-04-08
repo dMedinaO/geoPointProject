@@ -29,6 +29,7 @@ import android.support.v7.view.menu.ActionMenuItem;
 import android.support.v7.view.menu.ActionMenuItemView;
 import android.support.v7.widget.AppCompatImageView;
 import android.support.v7.widget.Toolbar;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -46,6 +47,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.osmdroid.util.GeoPoint;
 
+import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -238,6 +245,28 @@ public class PollActiveActivity extends CustomActivity {
             Toast.makeText(this, "El tipo de pregunta seleccionado no está implementado.", Toast.LENGTH_LONG).show();
             return;
         }
+
+        Log.d("OPENQUESTION", q.toJson());
+
+        if (q.getOptions().containsKey("image")){
+
+            String fileName = UUID.randomUUID().toString();
+            FileOutputStream outputStream;
+
+            try {
+                outputStream = openFileOutput(fileName, Context.MODE_PRIVATE);
+                outputStream.write(q.getOptions().get("image").toString().getBytes());
+                outputStream.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            q.getOptions().remove("image");
+            q.putOption("image", true);
+            q.putOption("imagePath", fileName);
+        }
+
+
         java.lang.Class activity = (Class) QUESTION_TYPE_LIST.get(q.getType());
         Intent intent = new Intent(this, activity);
         intent.putExtra("QUESTION", q.toJson());
@@ -558,5 +587,29 @@ public class PollActiveActivity extends CustomActivity {
 
             return listItem;
         }
+    }
+
+    private String encodeImage(String uriString){
+        InputStream inputStream = null;//You can get an inputStream using any IO API
+        try {
+            inputStream = new FileInputStream(getApplicationContext().getContentResolver().openFileDescriptor(Uri.parse(uriString), "r").getFileDescriptor());
+            byte[] bytes;
+            byte[] buffer = new byte[8192];
+            int bytesRead;
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            try {
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    output.write(buffer, 0, bytesRead);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            bytes = output.toByteArray();
+            return Base64.encodeToString(bytes, Base64.DEFAULT);
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

@@ -146,6 +146,7 @@ public class PointPlusActivity extends QuestionActivity {
             }
         }
         else{
+            mPointsOverlay.cleanPoints(mMap);
             pointSelected = null;
         }
     }

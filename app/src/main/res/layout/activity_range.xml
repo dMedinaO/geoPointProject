@@ -8,7 +8,8 @@
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="match_parent"
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -23,6 +24,8 @@
                 android:id="@+id/questiontitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:layout_weight="0"
                 android:text=""
                 android:textAppearance="@android:style/TextAppearance.Material.Headline" />
 
@@ -30,23 +33,33 @@
                 android:id="@+id/questiondescription"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:layout_weight="0"
                 android:text=""
                 android:textAppearance="@android:style/TextAppearance.Material.Medium" />
+
 
             <ImageView
                 android:id="@+id/questionimage"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_weight="0"
+                android:adjustViewBounds="true"
+                android:scaleType="fitXY"
                 app:srcCompat="@drawable/ic_check_box_outline_blank_black_24dp" />
 
             <ListView
                 android:id="@+id/item_list"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" />
+                android:layout_height="match_parent"
+                android:layout_weight="1" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_weight="0"
                 android:orientation="horizontal">
 
                 <Button

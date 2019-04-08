@@ -68,6 +68,10 @@
     <string name="label_button_cancel">Cancelar</string>
     <string name="label_button_delete">Eliminar</string>
     <string name="label_button_recover">Recuperar</string>
+    <string name="label_button_confirm">Confirmar</string>
+
+
+    <string name="text_must_restart_app">Se debe reiniciar la aplicación para que los cambios surtan efecto. ¿Desea reiniciar la aplicación ahora?</string>
 
     <string name="text_question_choice_editor_over_max_choices">El máximo de alternativas a seleccionar debe ser igual o mayor al número de alternativas ingresadas.</string>
     <string name="text_question_choice_editor_at_least_two_alternatives">Una pregunta con alternativas debe tener dos alternativas como mínimo.</string>

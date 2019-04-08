@@ -13,6 +13,7 @@ import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -21,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import cl.esanhueza.map_david.models.Poll;
+import cl.esanhueza.map_david.models.Question;
 
 public class PollFileStorageHelper {
     static final String LOG_TAG = "TEST ENCUESTAS: ";
@@ -135,7 +137,7 @@ public class PollFileStorageHelper {
 
             row += "inicio,termino,latitud,longitud";
             for (int i=0; i<poll.getQuestions().size(); i++){
-                row += ",pregunta" + String.valueOf(i);
+                row += ",pregunta" + String.valueOf(i + 1);
             }
             row += "\r\n";
 
@@ -155,10 +157,9 @@ public class PollFileStorageHelper {
 
                 JSONArray rs = obj.getJSONArray("respuestas");
 
-                Log.d("ENCUESTAS: ", rs.toString());
                 for (int j=0; j<rs.length(); j++) {
                     JSONObject robj =  rs.getJSONObject(j);
-                    row += "," + robj.getString("value");
+                    row += "," + '\'' + robj.getString("value") + '\'';
                 }
                 row += "\r\n";
             }
@@ -179,20 +180,48 @@ public class PollFileStorageHelper {
         return true;
     }
 
-    static final public String savePoll(Poll poll){
+    static final public String savePoll(Context context, Poll poll) {
+        ArrayList<String> imagePaths = new ArrayList<>();
+        for (Question q : poll.getQuestions()) {
+            // se abre la imagen guardada en forma de archivo y se agrega al json.
+            if (q.getOptions().containsKey("imagePath")) {
+                StringBuffer fileContent = new StringBuffer("");
+                File imageFile = new File( context.getFilesDir() + File.separator + q.getOptions().get("imagePath").toString());
+
+                byte[] buffer = new byte[1024];
+
+                FileInputStream fileInputStream = null;
+                try {
+                    fileInputStream = new FileInputStream(imageFile);
+                    int n;
+                    while ((n = fileInputStream.read(buffer)) != -1) {
+                        fileContent.append(new String(buffer, 0, n));
+                    }
+                    q.getOptions().remove("image");
+                    q.getOptions().put("image", fileContent);
+                    imagePaths.add(q.getOptions().get("imagePath").toString());
+                    q.getOptions().remove("imagePath");
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
         try {
             JSONObject json = new JSONObject(poll.toJson());
+
             File folder = PollFileStorageHelper.getPublicPollStorageDir();
             String title = poll.getTitle().replaceAll(" ", "_");
 
-            File file = new File(folder.getAbsolutePath(),  title + "_" + poll.getId() + ".json");
-            if (!file.exists()){
+            File file = new File(folder.getAbsolutePath(), title + "_" + poll.getId() + ".json");
+            if (!file.exists()) {
                 file.createNewFile();
                 FileWriter writer = new FileWriter(file);
                 writer.append(json.toString(2));
                 writer.close();
-            }
-            else{
+            } else {
                 Log.e(LOG_TAG, "Archivo json ya existe.");
             }
 
@@ -201,6 +230,17 @@ public class PollFileStorageHelper {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+
+        // se restauran las encuestas
+        int j = 0;
+        for (int i=0; i<poll.getQuestions().size(); i++) {
+            if (poll.getQuestions().get(i).getOptions().containsKey("image")){
+                poll.getQuestions().get(i).getOptions().remove("image");
+                poll.getQuestions().get(i).getOptions().put("image", true);
+                poll.getQuestions().get(i).getOptions().put("imagePath", imagePaths.get(j));
+                j++;
+            }
         }
         return null;
     }

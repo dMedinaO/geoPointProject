@@ -18,11 +18,9 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".PollListActivity"
-            android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -67,9 +65,6 @@
         <activity
             android:name=".PointPlusActivity"
             android:label="@string/title_activity_route"
-            android:theme="@style/AppTheme.NoActionBar" />
-        <activity
-            android:name=".PollDetailsActivity"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".SettingsActivity"

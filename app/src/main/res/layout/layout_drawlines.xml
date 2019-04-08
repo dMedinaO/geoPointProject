@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-android:layout_width="match_parent"
-android:layout_height="match_parent"
-android:orientation="vertical">
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_weight="0"
         android:orientation="horizontal">
 
         <ToggleButton
@@ -22,22 +23,24 @@ android:orientation="vertical">
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_weight="1">
 
         <org.osmdroid.views.MapView
             android:id="@+id/mapview"
             tilesource="Mapnik"
             android:layout_width="match_parent"
-            android:layout_height="400dp">
+            android:layout_height="wrap_content"
+            android:minHeight="400dp">
 
         </org.osmdroid.views.MapView>
 
         <cl.esanhueza.map_david.Util.CustomPaintingSurface
             android:id="@+id/paintingSurface"
             android:layout_width="match_parent"
-            android:layout_height="400dp"
+            android:layout_height="wrap_content"
             android:background="#38ababab"
+            android:minHeight="400dp"
             android:visibility="gone" />
 
     </RelativeLayout>

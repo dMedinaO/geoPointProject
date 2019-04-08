@@ -4,7 +4,10 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.net.Uri;
+import android.provider.CalendarContract;
 import android.util.Log;
 import android.view.View;
 import android.widget.CheckBox;
@@ -12,6 +15,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.Space;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -75,10 +79,14 @@ public class MultipleChoiceActivity extends QuestionActivity{
                     JSONObject alt = jsonArray.getJSONObject(i);
                     CheckBox box = new CheckBox(getApplicationContext());
                     box.setText(alt.getString("label"));
+                    box.setTextColor(Color.BLACK);
                     box.setContentDescription(alt.getString("value"));
 
                     box.setChecked(selectedList.contains(alt.getString("value")));
                     boxes.add(box);
+                    Space space = new Space(this);
+                    space.setMinimumHeight(25);
+                    linearLayout.addView(space);
                     linearLayout.addView(box);
 
                 }

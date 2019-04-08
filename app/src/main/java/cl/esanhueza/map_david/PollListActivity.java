@@ -2,21 +2,18 @@ package cl.esanhueza.map_david;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.location.LocationManager;
+import android.content.res.Configuration;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -26,6 +23,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -33,27 +31,68 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cl.esanhueza.map_david.models.Poll;
-import cl.esanhueza.map_david.PollDetailsActivity;
 import cl.esanhueza.map_david.storage.PollFileStorageHelper;
 
-public class PollListActivity extends CustomActivity {
-    static final int EDIT_POLL = 300;
-    static final int ANSWER_POLL = 400;
-    static final int CREATE_POLL = 500;
+public class PollListActivity extends CustomActivity implements PollListFragment.OnPollSelectedListener{
+    ViewGroup mListLayout;
+    ViewGroup mDetailsLayout;
 
-    PollListActivity.PollAdapter mAdapter;
-    ListView listView;
-    ArrayList<Poll> list = new ArrayList<>();
+    PollListFragment pollListFragment;
+
+    static final String TAG = "PollListActivity";
+
+    static final int EDIT_POLL = 300;
+    static final int ANSWER_POLL = 301;
+    static final int CREATE_POLL = 302;
+
+    static final int TAKE_POLL = 401;
+    final static int PICKFOLDER_REQUEST_CODE = 402;
+    final static int WRITE_REQUEST_CODE = 403;
+    final static int WRITE_REQUEST_CODE_CSV = 404;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_poll_list);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
+        setContentView(R.layout.activity_main_poll_list);
         setTitle(R.string.app_name);
 
+
+        // If our layout has a container for the image selector fragment,
+        // create and add it
+        mListLayout = (ViewGroup) findViewById(R.id.activity_poll_list_list);
+        if (mListLayout != null) {
+            Log.i(TAG, "onCreate: adding PollListFragment to PollListActivity");
+
+            // Add image selector fragment to the activity's container layout
+            pollListFragment = new PollListFragment();
+            FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+            fragmentTransaction.replace(mListLayout.getId(), pollListFragment,
+                    PollListFragment.class.getName());
+
+            // Commit the transaction
+            fragmentTransaction.commit();
+        }
+
+        // If our layout has a container for the image rotator fragment, create
+        // it and add it
+        mDetailsLayout = (ViewGroup) findViewById(R.id.activity_poll_list_details);
+        if (mDetailsLayout != null) {
+            Log.i(TAG, "onCreate: adding PollDetailsFragment to PollListActivity");
+
+            // Add image rotator fragment to the activity's container layout
+            PollDetailsFragment detailsFragment = new PollDetailsFragment();
+            FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+            fragmentTransaction.replace(mDetailsLayout.getId(), detailsFragment,
+                    PollDetailsFragment.class.getName());
+
+            // Commit the transaction
+            fragmentTransaction.commit();
+        }
+
+        return;
+
+        /*
         listView = findViewById(R.id.poll_list);
         mAdapter = new PollAdapter(this, list);
         listView.setAdapter(mAdapter);
@@ -82,6 +121,7 @@ public class PollListActivity extends CustomActivity {
         });
 
         loadList();
+        */
     }
 
     @Override
@@ -107,16 +147,10 @@ public class PollListActivity extends CustomActivity {
         }
     }
 
-    public void openPoll(Poll poll){
-        Intent intent = new Intent(this, PollDetailsActivity.class);
-        intent.putExtra("POLL", poll.getPath());
-        startActivityForResult(intent, ANSWER_POLL);
-    }
-
     public void editPoll(Poll poll){
         Intent intent = new Intent(this, PollEditorActivity.class);
-        Log.d("TST ENCUESTAS: ", poll.toJson());
-        intent.putExtra("POLL", poll.toJson());
+        intent.putExtra("POLL", poll.getPath());
+        //intent.putExtra("POLL", poll.toJson());
         startActivityForResult(intent, EDIT_POLL);
     }
 
@@ -126,35 +160,13 @@ public class PollListActivity extends CustomActivity {
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED){
-                list.clear();
-                list.addAll(PollFileStorageHelper.readPolls());
-                mAdapter.notifyDataSetChanged();
-            }
-        }
-    }
-
-    public void loadList(){
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
-        } else {
-            list.clear();
-            list.addAll(PollFileStorageHelper.readPolls());
-            mAdapter.notifyDataSetChanged();
-        }
-    }
-
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+
         if (resultCode == Activity.RESULT_OK){
             switch (requestCode){
                 case CREATE_POLL:
-                    loadList();
                     break;
                 case EDIT_POLL:
-                    loadList();
                     break;
                 default:
                     break;
@@ -163,38 +175,50 @@ public class PollListActivity extends CustomActivity {
         else{
 
         }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
-
-
-    public class PollAdapter extends ArrayAdapter<Poll> {
-
-        private Context mContext;
-        private List<Poll> list = new ArrayList<>();
-
-        public PollAdapter(@NonNull Context context, ArrayList<Poll> list) {
-            super(context, 0 , list);
-            mContext = context;
-            this.list = list;
-        }
-
-        @NonNull
-        @Override
-        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-            View listItem = convertView;
-            if(listItem == null) {
-                listItem = LayoutInflater.from(mContext).inflate(R.layout.listview_poll, parent, false);
-            }
-
-            final Poll current = list.get(position);
-            TextView number = (TextView) listItem.findViewById(R.id.poll_number);
-            number.setText(String.valueOf(position + 1));
-
-            TextView titleView = (TextView) listItem.findViewById(R.id.poll_title);
-            titleView.setText(current.getTitle());
-
-            return listItem;
+    @Override
+    public void onAttachFragment(Fragment fragment) {
+        if (fragment instanceof PollListFragment) {
+            PollListFragment headlinesFragment = (PollListFragment) fragment;
+            headlinesFragment.setOnPollSelectedListener(this);
         }
     }
 
+    @Override
+    public void onPollSelected(Poll poll) {
+        ViewGroup target = mDetailsLayout != null ? mDetailsLayout : mListLayout;
+
+        PollDetailsFragment detailsFragment = PollDetailsFragment.newInstance(poll);
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.replace(target.getId(), detailsFragment,
+                PollDetailsFragment.class.getName());
+
+        // Commit the transaction
+        fragmentTransaction.commit();
+    }
+
+    @Override
+    public void onPollEdit(Poll poll) {
+        editPoll(poll);
+    }
+
+    @Override
+    public void onPollCreate() {
+        createPoll();
+    }
+
+    @Override
+    public void onBackPressed(){
+        if (getSupportFragmentManager().getFragments().get(0) instanceof PollDetailsFragment){
+            FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+            fragmentTransaction.replace(mListLayout.getId(), pollListFragment,
+                    PollListFragment.class.getName());
+            fragmentTransaction.commit();
+        }
+        else{
+            super.onBackPressed();
+        }
+    }
 }

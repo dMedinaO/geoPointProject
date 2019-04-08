@@ -23,6 +23,7 @@
                     android:id="@+id/questiontitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="10dp"
                     android:text=""
                     android:textAppearance="@android:style/TextAppearance.Material.Headline" />
 
@@ -30,13 +31,19 @@
                     android:id="@+id/questiondescription"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="10dp"
                     android:text=""
                     android:textAppearance="@android:style/TextAppearance.Material.Medium" />
+
 
                 <ImageView
                     android:id="@+id/questionimage"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:layout_marginTop="16dp"
+                    android:adjustViewBounds="true"
+                    android:scaleType="fitXY"
                     app:srcCompat="@drawable/ic_check_box_outline_blank_black_24dp" />
 
                 <TextView

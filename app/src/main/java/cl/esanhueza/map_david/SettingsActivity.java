@@ -117,16 +117,16 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
                         new AlertDialog.Builder(context)
                                 .setIcon(android.R.drawable.ic_dialog_alert)
-                                .setTitle("Confirmar")
-                                .setMessage("Se debe reiniciar la aplicación para que el idioma sea actualizado. ¿Desea reiniciar la aplicación ahora?")
-                                .setNegativeButton("Ignorar", new DialogInterface.OnClickListener()
+                                .setTitle(R.string.label_button_confirm)
+                                .setMessage(R.string.text_must_restart_app)
+                                .setNegativeButton(R.string.label_button_cancel, new DialogInterface.OnClickListener()
                                 {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
 
                                     }
                                 })
-                                .setPositiveButton("Reiniciar", new DialogInterface.OnClickListener()
+                                .setPositiveButton(R.string.label_button_accept, new DialogInterface.OnClickListener()
                                 {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
@@ -220,7 +220,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         public boolean onOptionsItemSelected(MenuItem item) {
             int id = item.getItemId();
             if (id == android.R.id.home) {
-                startActivity(new Intent(getActivity(), SettingsActivity.class));
+                startActivity(new Intent(getActivity(), PollListActivity.class));
                 return true;
             }
             return super.onOptionsItemSelected(item);

@@ -15,20 +15,20 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.Menu;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import cl.esanhueza.map_david.Util.FileUtil;
 import cl.esanhueza.map_david.models.Poll;
 import cl.esanhueza.map_david.storage.PersonContract;
 import cl.esanhueza.map_david.storage.PollFileStorageHelper;
@@ -36,7 +36,7 @@ import cl.esanhueza.map_david.storage.ResponseContract;
 import cl.esanhueza.map_david.storage.ResponseDbHelper;
 
 
-public class PollDetailsActivity extends CustomActivity {
+public class PollDetailsFragment extends Fragment {
     static final int TAKE_POLL = 300;
     final static int PICKFOLDER_REQUEST_CODE = 9000;
     final static int WRITE_REQUEST_CODE = 5000;
@@ -44,66 +44,89 @@ public class PollDetailsActivity extends CustomActivity {
     ResponseDbHelper mDbHelper;
     Poll poll;
 
+    public static PollDetailsFragment newInstance(Poll poll) {
+        Bundle args = new Bundle();
+        args.putString("POLL", poll.getPath());
+        PollDetailsFragment fragment = new PollDetailsFragment();
+        fragment.setArguments(args);
+        return fragment;
+    }
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_poll_details);
+    }
 
-        Toolbar myToolbar = (Toolbar) findViewById(R.id.poll_toolbar);
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        View view;
+        Bundle bundle = getArguments();
+        if (bundle != null){
+            String pollString = bundle.getString("POLL");
+            mDbHelper = new ResponseDbHelper(getContext());// Gets the data repository in write mode
+            view =  inflater.inflate(R.layout.activity_poll_details, null);
+            poll = PollFileStorageHelper.readPoll(pollString);
 
-        setSupportActionBar(myToolbar);
+            TextView viewTitle = view.findViewById(R.id.polltitle);
+            viewTitle.setText(poll.getTitle());
 
-        mDbHelper = new ResponseDbHelper(getApplicationContext());// Gets the data repository in write mode
+            TextView viewDescription = view.findViewById(R.id.polldescription);
+            viewDescription.setText(poll.getDescription());
 
-        Intent intent = getIntent();
-        Bundle bundle = intent.getExtras();
-        String pollString = bundle.getString("POLL");
+            TextView viewAnswers = view.findViewById(R.id.poll_answers);
+            viewAnswers.setText(String.valueOf(0));
 
+            TextView viewQuestions = view.findViewById(R.id.poll_question_number);
+            viewQuestions.setText(String.valueOf(poll.getQuestions().size()));
 
-        poll = PollFileStorageHelper.readPoll(pollString);
+            loadStats(view);
 
-        setTitle(R.string.text_poll_details);
-        TextView viewTitle = findViewById(R.id.polltitle);
-        viewTitle.setText(poll.getTitle());
+            FloatingActionButton fab = (FloatingActionButton) view.findViewById(R.id.fab);
+            fab.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    startPoll(null);
+                }
+            });
 
-        TextView viewDescription = findViewById(R.id.polldescription);
-        viewDescription.setText(poll.getDescription());
-
-        TextView viewAnswers = findViewById(R.id.poll_answers);
-        viewAnswers.setText(String.valueOf(0));
-
-        TextView viewQuestions = findViewById(R.id.poll_question_number);
-        viewQuestions.setText(String.valueOf(poll.getQuestions().size()));
-
-        loadStats();
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startPoll(null);
+            String personId = checkOpenPoll();
+            if (personId != null){
+                restartPoll(personId);
             }
-        });
-
-        String personId = checkOpenPoll();
-        Log.d("TST ENCUESTAS: ", String.valueOf(personId));
-        if (personId != null){
-            restartPoll(personId);
+            Button btn = view.findViewById(R.id.btn_export_responses);
+            btn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onActionButtonClick(v);
+                }
+            });
+            Button btn2 = view.findViewById(R.id.btn_export_responses_csv);
+            btn2.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onActionButtonClick(v);
+                }
+            });
+            Button btn3 = view.findViewById(R.id.btn_remove_responses);
+            btn3.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onActionButtonClick(v);
+                }
+            });
         }
+        else{
+            view =  inflater.inflate(R.layout.fragment_poll_details_blank, null);
+        }
+
+        return view;
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_poll_details, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_remove_responses:
-                new AlertDialog.Builder(PollDetailsActivity.this)
+    public void onActionButtonClick(View item) {
+        switch (item.getId()) {
+            case R.id.btn_remove_responses:
+                new AlertDialog.Builder(getActivity())
                         .setIcon(android.R.drawable.ic_dialog_alert)
                         .setTitle(R.string.text_poll_delete_responses)
                         .setMessage(R.string.text_poll_delete_responses_more)
@@ -120,29 +143,22 @@ public class PollDetailsActivity extends CustomActivity {
                             }
                         })
                         .show();
-                return true;
-            case R.id.action_export_responses:
+                break;
+            case R.id.btn_export_responses:
                 String fileName = poll.getTitle();
                 fileName = fileName.replace(" ", "_");
                 createFile("text/plain", fileName + "_" + poll.getId() + ".json");
-                return true;
-
-            case R.id.action_export_responses_csv:
+                break;
+            case R.id.btn_export_responses_csv:
                 String csvFileName = poll.getTitle();
                 fileName = csvFileName .replace(" ", "_");
                 createFileCSV("text/csv", fileName + "_" + poll.getId() + ".csv");
-                return true;
-
-            default:
-                // If we got here, the user's action was not recognized.
-                // Invoke the superclass to handle it.
-                return super.onOptionsItemSelected(item);
-
+                break;
         }
     }
 
     private void restartPoll(final String personId){
-        new AlertDialog.Builder(PollDetailsActivity.this)
+        new AlertDialog.Builder(getActivity())
                 .setIcon(android.R.drawable.ic_dialog_alert)
                 .setTitle(R.string.text_poll_recovery)
                 .setMessage(R.string.text_poll_recovery_more)
@@ -216,6 +232,7 @@ public class PollDetailsActivity extends CustomActivity {
         return;
     }
 
+    @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == WRITE_REQUEST_CODE && resultCode == Activity.RESULT_OK){
             exportResponses(data.getData(), "json");
@@ -234,7 +251,7 @@ public class PollDetailsActivity extends CustomActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED){
+            if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED){
 
             }
         }
@@ -242,12 +259,12 @@ public class PollDetailsActivity extends CustomActivity {
 
     private void refreshStorage(String path){
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            MediaScannerConnection.scanFile(this, new String[]{path}, null, new MediaScannerConnection.OnScanCompletedListener() {
+            MediaScannerConnection.scanFile(getActivity(), new String[]{path}, null, new MediaScannerConnection.OnScanCompletedListener() {
                 public void onScanCompleted(String path, Uri uri) {
                 }
             });
         } else {
-            this.sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED,
+            getActivity().sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED,
                     Uri.parse("file://" + path)));
         }
     }
@@ -397,10 +414,11 @@ public class PollDetailsActivity extends CustomActivity {
 
             boolean result = false;
             if (format.equals("csv")){
-                result = PollFileStorageHelper.saveResponsesCSV(getApplicationContext(), uriDestination, poll, responses);
+                result = PollFileStorageHelper.saveResponsesCSV(getActivity(), uriDestination, poll, responses);
             }
             else{
-                result = PollFileStorageHelper.saveResponses(getApplicationContext(), uriDestination, poll, responses);
+                Log.d("SAVE RESPOSNES", responses.toString());
+                result = PollFileStorageHelper.saveResponses(getActivity(), uriDestination, poll, responses);
             }
 
             if (result) refreshStorage(uriDestination.getPath());
@@ -443,7 +461,7 @@ public class PollDetailsActivity extends CustomActivity {
 
 
     public void startPoll(@Nullable  String personId){
-        Intent intent = new Intent(this, PollActiveActivity.class);
+        Intent intent = new Intent(getActivity(), PollActiveActivity.class);
         if (personId != null){
             intent.putExtra("PERSON", personId);
         }
@@ -451,23 +469,26 @@ public class PollDetailsActivity extends CustomActivity {
         startActivityForResult(intent, TAKE_POLL);
     }
 
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-    }
-
     /* almacena la respuesta a una pregunta. */
-    private void loadStats() {
+    private void loadStats(View view) {
         SQLiteDatabase db = mDbHelper.getReadableDatabase();
         Cursor cursor = db.query(PersonContract.PersonEntry.TABLE_NAME, new String[]{PersonContract.PersonEntry.COLUMN_NAME_POLL_ID}, PersonContract.PersonEntry.COLUMN_NAME_POLL_ID + "= ?", new String[]{poll.getId()}, null, null, null);
-        TextView viewAnswers = findViewById(R.id.poll_answers);
+        TextView viewAnswers = view.findViewById(R.id.poll_answers);
         viewAnswers.setText(String.valueOf(cursor.getCount()));
         db.close();
     }
 
+    /* almacena la respuesta a una pregunta. */
+    private void loadStats() {
+        loadStats(getView());
+    }
+
     @Override
-    protected void onDestroy() {
-        mDbHelper.close();
+    public void onDestroy() {
+        if (mDbHelper != null){
+            mDbHelper.close();
+        }
+
         super.onDestroy();
     }
 }

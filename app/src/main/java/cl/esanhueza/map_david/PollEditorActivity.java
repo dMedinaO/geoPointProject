@@ -43,6 +43,7 @@ import org.w3c.dom.Text;
 import java.io.BufferedReader;
 import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -72,7 +73,7 @@ public class PollEditorActivity extends CustomActivity {
     QuestionAdapter mAdapter;
     ListView listView;
     Context mContext;
-    Poll poll = new Poll();
+    Poll poll;
 
     static final public HashMap QUESTION_TYPE_LIST = new HashMap<String, Integer>(){{
         put("choice", R.string.label_type_question_choice);
@@ -95,16 +96,12 @@ public class PollEditorActivity extends CustomActivity {
         Intent intent = getIntent();
 
         if (intent.hasExtra("POLL")){
-            try {
-                poll = new Poll(new JSONObject(intent.getStringExtra("POLL")));
-                TextView titleView = findViewById(R.id.polltitle);
-                TextView descriptionView = findViewById(R.id.polldescription);
-                titleView.setText(poll.getTitle());
-                descriptionView.setText(poll.getDescription());
-                questionsList.addAll(poll.getQuestions());
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+            poll = PollFileStorageHelper.readPoll(intent.getStringExtra("POLL"));
+            TextView titleView = findViewById(R.id.polltitle);
+            TextView descriptionView = findViewById(R.id.polldescription);
+            titleView.setText(poll.getTitle());
+            descriptionView.setText(poll.getDescription());
+            questionsList.addAll(poll.getQuestions());
         }
 
         mContext = getApplicationContext();
@@ -147,6 +144,25 @@ public class PollEditorActivity extends CustomActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Intent intent = new Intent(PollEditorActivity.this, QuestionEditorActivity.class);
                 Question q = questionsList.get(position);
+
+                if (q.getOptions().containsKey("image") && !q.getOptions().containsKey("imagePath")){
+
+                    String fileName = UUID.randomUUID().toString();
+                    FileOutputStream outputStream;
+
+                    try {
+                        outputStream = openFileOutput(fileName, Context.MODE_PRIVATE);
+                        outputStream.write(q.getOptions().get("image").toString().getBytes());
+                        outputStream.close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    q.getOptions().remove("image");
+                    q.putOption("image", true);
+                    q.putOption("imagePath", fileName);
+                }
+
                 intent.putExtra("QUESTION", q.toJson());
                 startActivityForResult(intent, 0);
             }
@@ -267,7 +283,7 @@ public class PollEditorActivity extends CustomActivity {
             poll.addQuestion(q);
         }
 
-        String result = PollFileStorageHelper.savePoll(poll);
+        String result = PollFileStorageHelper.savePoll(this, poll);
         if (result != null){
             refreshStorage(result);
         }

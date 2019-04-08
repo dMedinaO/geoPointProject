@@ -27,6 +27,11 @@ import org.json.JSONObject;
 import org.osmdroid.config.Configuration;
 import org.osmdroid.util.GeoPoint;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
 import cl.esanhueza.map_david.models.Question;
 
 public abstract class QuestionActivity extends CustomActivity {
@@ -78,9 +83,31 @@ public abstract class QuestionActivity extends CustomActivity {
         ((TextView) findViewById(R.id.questiondescription)).setText(question.getDescription());
         ImageView imageView = findViewById(R.id.questionimage);
         if (question.getOptions().containsKey("image")){
-            byte[] decodedImageBytes = Base64.decode(question.getOptions().get("image").toString(), Base64.DEFAULT);
-            imageView.setImageBitmap(BitmapFactory.decodeByteArray(decodedImageBytes, 0, decodedImageBytes.length));
-            imageView.setVisibility(View.VISIBLE);
+
+            StringBuffer fileContent = new StringBuffer("");
+            File imageFile = new File( getFilesDir() + File.separator + question.getOptions().get("imagePath").toString());
+
+            byte[] buffer = new byte[1024];
+
+            FileInputStream fileInputStream = null;
+            try {
+                fileInputStream = new FileInputStream(imageFile);
+                int n;
+                while ((n = fileInputStream.read(buffer)) != -1) {
+                    fileContent.append(new String(buffer, 0, n));
+                }
+
+                Log.d("IMAGE IMAGE: ", fileContent.toString());
+                byte[] decodedImageBytes = Base64.decode(fileContent.toString(), Base64.DEFAULT);
+                imageView.setImageBitmap(BitmapFactory.decodeByteArray(decodedImageBytes, 0, decodedImageBytes.length));
+                imageView.setVisibility(View.VISIBLE);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+
         }
         else{
             imageView.setVisibility(View.GONE);

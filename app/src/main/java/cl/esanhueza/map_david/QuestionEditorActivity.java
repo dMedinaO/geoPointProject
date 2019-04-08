@@ -32,13 +32,16 @@ import org.json.JSONObject;
 import org.osmdroid.config.Configuration;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import cl.esanhueza.map_david.models.Question;
 
@@ -200,10 +203,24 @@ public class QuestionEditorActivity extends AppCompatActivity{
                 question.putOption(key, editedMap.get(key));
             }
         }
+        // no se agrega la imagen directamente, se genera un archivo en el dispositivo y se pasa
+        // la direccion.
         if (uriImage != null){
-            question.putOption("image", encodeImage(uriImage));
-        }
+            String fileName = UUID.randomUUID().toString();
+            FileOutputStream outputStream;
 
+            try {
+                outputStream = openFileOutput(fileName, Context.MODE_PRIVATE);
+                outputStream.write(encodeImage(uriImage).getBytes());
+                outputStream.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            question.putOption("image", true);
+            question.putOption("imagePath", fileName);
+            //question.putOption("image", encodeImage(uriImage));
+        }
 
         Intent intent = new Intent();
         intent.setData(Uri.parse(question.toJson()));
@@ -228,9 +245,24 @@ public class QuestionEditorActivity extends AppCompatActivity{
         else{
             if (question.getOptions().containsKey("image")){
                 imageView = findViewById(R.id.image_attached);
-                byte[] decodedImageBytes = Base64.decode(question.getOptions().get("image").toString(), Base64.DEFAULT);
-                imageView.setImageBitmap(BitmapFactory.decodeByteArray(decodedImageBytes, 0, decodedImageBytes.length));
-                imageView.setVisibility(View.VISIBLE);
+                try {
+                    StringBuffer fileContent = new StringBuffer("");
+                    byte[] buffer = new byte[1024];
+                    FileInputStream fileInputStream = openFileInput(question.getOptions().get("imagePath").toString());
+                    int n;
+                    while ((n = fileInputStream.read(buffer)) != -1)
+                    {
+                        fileContent.append(new String(buffer, 0, n));
+                    }
+                    byte[] decodedImageBytes = Base64.decode(fileContent.toString(), Base64.DEFAULT);
+                    imageView.setImageBitmap(BitmapFactory.decodeByteArray(decodedImageBytes, 0, decodedImageBytes.length));
+                    imageView.setVisibility(View.VISIBLE);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
             }
         }
     }
