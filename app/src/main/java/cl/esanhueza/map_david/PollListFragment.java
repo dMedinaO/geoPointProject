@@ -30,7 +30,6 @@ import cl.esanhueza.map_david.storage.PollFileStorageHelper;
 public class PollListFragment extends Fragment {
     OnPollSelectedListener callbackSelection;
     static final int EDIT_POLL = 300;
-    static final int ANSWER_POLL = 301;
     static final int CREATE_POLL = 302;
 
     PollListFragment.PollAdapter mAdapter;
@@ -73,42 +72,6 @@ public class PollListFragment extends Fragment {
         loadList();
         return view;
     }
-
-
-/*
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_settings:
-                Intent intent = new Intent(this, SettingsActivity.class);
-                startActivity(intent);
-                return true;
-
-            default:
-                // If we got here, the user's action was not recognized.
-                // Invoke the superclass to handle it.
-                return super.onOptionsItemSelected(item);
-
-        }
-    }*/
-
- /*   public void openPoll(Poll poll){
-        Intent intent = new Intent(this, PollDetailsActivity.class);
-        intent.putExtra("POLL", poll.getPath());
-        startActivityForResult(intent, ANSWER_POLL);
-    }*/
-
-  /*  public void editPoll(Poll poll){
-        Intent intent = new Intent(this, PollEditorActivity.class);
-        Log.d("TST ENCUESTAS: ", poll.toJson());
-        intent.putExtra("POLL", poll.toJson());
-        startActivityForResult(intent, EDIT_POLL);
-    }
-
-    public void createPoll(){
-        Intent intent = new Intent(this, PollEditorActivity.class);
-        startActivityForResult(intent, CREATE_POLL);
-    }*/
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {

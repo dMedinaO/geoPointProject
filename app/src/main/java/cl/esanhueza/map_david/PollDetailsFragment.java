@@ -38,7 +38,6 @@ import cl.esanhueza.map_david.storage.ResponseDbHelper;
 
 public class PollDetailsFragment extends Fragment {
     static final int TAKE_POLL = 300;
-    final static int PICKFOLDER_REQUEST_CODE = 9000;
     final static int WRITE_REQUEST_CODE = 5000;
     final static int WRITE_REQUEST_CODE_CSV = 5001;
     ResponseDbHelper mDbHelper;
@@ -108,13 +107,6 @@ public class PollDetailsFragment extends Fragment {
                     onActionButtonClick(v);
                 }
             });
-            Button btn3 = view.findViewById(R.id.btn_remove_responses);
-            btn3.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    onActionButtonClick(v);
-                }
-            });
         }
         else{
             view =  inflater.inflate(R.layout.fragment_poll_details_blank, null);
@@ -125,25 +117,6 @@ public class PollDetailsFragment extends Fragment {
 
     public void onActionButtonClick(View item) {
         switch (item.getId()) {
-            case R.id.btn_remove_responses:
-                new AlertDialog.Builder(getActivity())
-                        .setIcon(android.R.drawable.ic_dialog_alert)
-                        .setTitle(R.string.text_poll_delete_responses)
-                        .setMessage(R.string.text_poll_delete_responses_more)
-                        .setNegativeButton(R.string.label_button_cancel, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                            }
-                        })
-                        .setPositiveButton(R.string.label_button_accept, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                removeResponsesFromDb();
-                                loadStats();
-                            }
-                        })
-                        .show();
-                break;
             case R.id.btn_export_responses:
                 String fileName = poll.getTitle();
                 fileName = fileName.replace(" ", "_");
@@ -323,9 +296,7 @@ public class PollDetailsFragment extends Fragment {
                     personObj.put("position", position);
                 }
                 JSONArray personResponses = new JSONArray();
-                Log.d("TST ENCUESTAS: ", String.valueOf(responsesCursor.getCount()));
                 while (responsesCursor.moveToNext()){
-                    Log.d("TST ENCUESTAS: ", "Columnas : " + String.valueOf(responsesCursor.getColumnCount()));
                     JSONObject responseObj = new JSONObject(responsesCursor.getString(1));
                     responseObj.put("idPregunta", responsesCursor.getString(2));
                     personResponses.put(responseObj);
@@ -339,7 +310,6 @@ public class PollDetailsFragment extends Fragment {
         } finally {
             personsCursor.close();
             responsesCursor.close();
-            Log.d("TST ENCUESTAS: ", responses.toString());
             //PollFileStorageHelper.saveResponses(poll, responses);
         }
     }

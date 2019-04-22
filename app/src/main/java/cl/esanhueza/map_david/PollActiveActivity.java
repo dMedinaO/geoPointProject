@@ -203,39 +203,27 @@ public class PollActiveActivity extends CustomActivity {
         return true;
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_update_location:
-                updatePosition();
-                /*
-                //Toast.makeText(PollDetailsActivity.this, "Se ha creado un archivo con los resultados de las encuestas aplicadas.", Toast.LENGTH_SHORT);
-                */
-                return true;
-
-            default:
-                // If we got here, the user's action was not recognized.
-                // Invoke the superclass to handle it.
-                return super.onOptionsItemSelected(item);
-
-        }
-    }
-
     private void updatePosition(){
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
-        } else {
-            mLocationManager.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, mLocationListener, null);
+        if (!workWithoutLocation){
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+            } else {
+                mLocationManager.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, mLocationListener, null);
+            }
         }
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
                 mLocationManager.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, mLocationListener, null);
             }
+        }
+        else{
+            workWithoutLocation = true;
         }
     }
 
@@ -310,22 +298,22 @@ public class PollActiveActivity extends CustomActivity {
                 completed = false;
             }
         }
-        if (completed) {
+        if (completed){
             new AlertDialog.Builder(this)
-                    .setIcon(android.R.drawable.ic_dialog_alert)
-                    .setTitle("Encuesta completada")
-                    .setMessage("Ahora podra abandonar la encuesta de forma segura.")
-                    .setPositiveButton("Salir", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            Intent intent = new Intent();
-                            intent.putExtra("personId", personId);
-                            setResult(Activity.RESULT_OK, intent);
-                            setPollCompleted();
-                            finish();
-                        }
-                    })
-                    .show();
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .setTitle(R.string.text_poll_complete_title)
+                .setMessage(R.string.text_poll_complete)
+                .setPositiveButton(R.string.label_button_exit_poll_completed, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent intent = new Intent();
+                        intent.putExtra("personId", personId);
+                        setResult(Activity.RESULT_OK, intent);
+                        setPollCompleted();
+                        finish();
+                    }
+                })
+                .show();
         }
     }
 
@@ -520,7 +508,7 @@ public class PollActiveActivity extends CustomActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (mLocationListener != null && !workWithoutLocation){
+        if (mLocationListener != null){
             updatePosition();
         }
     }
@@ -541,10 +529,7 @@ public class PollActiveActivity extends CustomActivity {
     @Override
     protected void onRestart() {
         super.onRestart();
-        if (!workWithoutLocation){
-            updatePosition();
-        }
-
+        updatePosition();
     }
 
     public class QuestionAdapter extends ArrayAdapter<Question> {

@@ -213,11 +213,11 @@ public class PollEditorActivity extends CustomActivity {
 
             case R.id.action_save_poll:
                 // si tiene respuestas, se guarda como una nueva encuesta.
-                if (pollHasAnswers(poll.getId())){
+                if (poll == null){
                     new AlertDialog.Builder(this)
                         .setIcon(android.R.drawable.ic_dialog_alert)
-                        .setTitle(R.string.text_save_poll)
-                        .setMessage(R.string.text_save_poll_as_new_more)
+                        .setTitle(R.string.text_save_poll_title)
+                        .setMessage(R.string.text_save_poll_as_new)
                         .setNegativeButton(R.string.label_button_cancel, new DialogInterface.OnClickListener()
                         {
                             @Override
@@ -235,9 +235,31 @@ public class PollEditorActivity extends CustomActivity {
                         .show();
                 }
                 else{
-                    new AlertDialog.Builder(this)
+                    if (pollHasAnswers(poll.getId())){
+                        new AlertDialog.Builder(this)
                             .setIcon(android.R.drawable.ic_dialog_alert)
-                            .setTitle(R.string.text_save_poll)
+                            .setTitle(R.string.text_save_poll_title)
+                            .setMessage(R.string.text_save_poll_has_answers)
+                            .setNegativeButton(R.string.label_button_cancel, new DialogInterface.OnClickListener()
+                            {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+
+                                }
+                            })
+                            .setPositiveButton(R.string.label_button_accept, new DialogInterface.OnClickListener()
+                            {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    savePoll(true);
+                                }
+                            })
+                            .show();
+                    }
+                    else{
+                        new AlertDialog.Builder(this)
+                            .setIcon(android.R.drawable.ic_dialog_alert)
+                            .setTitle(R.string.text_save_poll_title)
                             .setMessage(R.string.text_save_poll_update)
                             .setNegativeButton(R.string.label_button_cancel, new DialogInterface.OnClickListener()
                             {
@@ -254,6 +276,7 @@ public class PollEditorActivity extends CustomActivity {
                                 }
                             })
                             .show();
+                    }
                 }
 
                 return true;
@@ -268,6 +291,7 @@ public class PollEditorActivity extends CustomActivity {
 
     public void savePoll(boolean newPoll){
         if (newPoll){
+            poll = new Poll();
             String uuid = UUID.randomUUID().toString().replace("-", "");
             poll.setId(uuid);
         }

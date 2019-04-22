@@ -134,7 +134,14 @@ public class CustomPaintingSurface extends View {
             return polyline.getPoints();
         }
         else if (drawingMode == Mode.Polygon){
-            Polygon p = lastPolygon;
+            Polygon p;
+            if (lastPolygon != null){
+                p = lastPolygon;
+            }
+            else{
+                p = new Polygon(map);
+                p.setPoints(((Polyline) lastOverlay).getPoints());
+            }
             return new ArrayList<>(p.getPoints());
         }
         return null;
@@ -193,6 +200,7 @@ public class CustomPaintingSurface extends View {
                         if (lastOverlay != null){
                             map.getOverlayManager().remove(lastOverlay);
                         }
+
                         lastOverlay = line;
                         map.getOverlayManager().add(lastOverlay);
                         lastPolygon=null;
@@ -201,7 +209,6 @@ public class CustomPaintingSurface extends View {
                         Log.d("TST ENCUSETAS: ", "lastPolygon != NULL : " + String.valueOf(lastPolygon != null));
                         if (lastPolygon == null){
                             Point last = projection.unrotateAndScalePoint(pts.get(pts.size()-1).x, pts.get(pts.size()-1).y, null);
-                            Log.d("TST ESCUNESTAS: ", String.valueOf(Math.pow(firstPoint.x - last.x, 2.0) + Math.pow(firstPoint.y - last.y, 2) > Math.pow(100.0, 2)));
                             if (Math.pow(firstPoint.x - last.x, 2.0) + Math.pow(firstPoint.y - last.y, 2) > Math.pow(100.0, 2)){
                                 forceLineDrawing = true;
                             }

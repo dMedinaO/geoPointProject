@@ -2,10 +2,13 @@ package cl.esanhueza.map_david;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -31,24 +34,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cl.esanhueza.map_david.models.Poll;
+import cl.esanhueza.map_david.storage.PersonContract;
 import cl.esanhueza.map_david.storage.PollFileStorageHelper;
+import cl.esanhueza.map_david.storage.ResponseContract;
+import cl.esanhueza.map_david.storage.ResponseDbHelper;
 
 public class PollListActivity extends CustomActivity implements PollListFragment.OnPollSelectedListener{
     ViewGroup mListLayout;
     ViewGroup mDetailsLayout;
-
+    Menu mMenu;
     PollListFragment pollListFragment;
+    PollDetailsFragment pollDetailsFragment;
+    ResponseDbHelper mDbHelper;
 
     static final String TAG = "PollListActivity";
 
     static final int EDIT_POLL = 300;
-    static final int ANSWER_POLL = 301;
     static final int CREATE_POLL = 302;
 
-    static final int TAKE_POLL = 401;
-    final static int PICKFOLDER_REQUEST_CODE = 402;
-    final static int WRITE_REQUEST_CODE = 403;
-    final static int WRITE_REQUEST_CODE_CSV = 404;
 
 
     @Override
@@ -56,6 +59,7 @@ public class PollListActivity extends CustomActivity implements PollListFragment
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_poll_list);
         setTitle(R.string.app_name);
+        mDbHelper = new ResponseDbHelper(this);
 
 
         // If our layout has a container for the image selector fragment,
@@ -91,41 +95,11 @@ public class PollListActivity extends CustomActivity implements PollListFragment
         }
 
         return;
-
-        /*
-        listView = findViewById(R.id.poll_list);
-        mAdapter = new PollAdapter(this, list);
-        listView.setAdapter(mAdapter);
-
-        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
-                editPoll(list.get(position));
-                return true;
-            }
-        });
-
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                openPoll(list.get(position));
-            }
-        });
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                createPoll();
-            }
-        });
-
-        loadList();
-        */
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        this.mMenu = menu;
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_poll_list, menu);
         return true;
@@ -134,6 +108,35 @@ public class PollListActivity extends CustomActivity implements PollListFragment
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case R.id.action_delete_responses:
+                new AlertDialog.Builder(this)
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .setTitle(R.string.text_poll_delete_responses)
+                        .setMessage(R.string.text_poll_delete_responses_more)
+                        .setNegativeButton(R.string.label_button_cancel, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                            }
+                        })
+                        .setPositiveButton(R.string.label_button_accept, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                SQLiteDatabase db = mDbHelper.getWritableDatabase();
+                                Poll poll = pollDetailsFragment.poll;
+                                db.delete(PersonContract.PersonEntry.TABLE_NAME,
+                                        PersonContract.PersonEntry.COLUMN_NAME_POLL_ID+ "= ?",
+                                        new String[]{poll.getId()}
+                                );
+                                db.delete(ResponseContract.ResponseEntry.TABLE_NAME,
+                                        ResponseContract.ResponseEntry.COLUMN_NAME_POLL_ID + "= ?",
+                                        new String[]{poll.getId()}
+                                );
+                                db.close();
+                                onPollSelected(poll);
+                            }
+                        })
+                        .show();
+                return true;
             case R.id.action_settings:
                 Intent intent = new Intent(this, SettingsActivity.class);
                 startActivity(intent);
@@ -150,7 +153,6 @@ public class PollListActivity extends CustomActivity implements PollListFragment
     public void editPoll(Poll poll){
         Intent intent = new Intent(this, PollEditorActivity.class);
         intent.putExtra("POLL", poll.getPath());
-        //intent.putExtra("POLL", poll.toJson());
         startActivityForResult(intent, EDIT_POLL);
     }
 
@@ -165,8 +167,10 @@ public class PollListActivity extends CustomActivity implements PollListFragment
         if (resultCode == Activity.RESULT_OK){
             switch (requestCode){
                 case CREATE_POLL:
+                    pollListFragment.loadList();
                     break;
                 case EDIT_POLL:
+                    pollListFragment.loadList();
                     break;
                 default:
                     break;
@@ -190,13 +194,16 @@ public class PollListActivity extends CustomActivity implements PollListFragment
     public void onPollSelected(Poll poll) {
         ViewGroup target = mDetailsLayout != null ? mDetailsLayout : mListLayout;
 
-        PollDetailsFragment detailsFragment = PollDetailsFragment.newInstance(poll);
+        pollDetailsFragment = PollDetailsFragment.newInstance(poll);
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        fragmentTransaction.replace(target.getId(), detailsFragment,
+        fragmentTransaction.replace(target.getId(), pollDetailsFragment,
                 PollDetailsFragment.class.getName());
 
         // Commit the transaction
         fragmentTransaction.commit();
+
+        MenuItem item = mMenu.findItem(R.id.action_delete_responses);
+        item.setVisible(true);
     }
 
     @Override
@@ -216,9 +223,21 @@ public class PollListActivity extends CustomActivity implements PollListFragment
             fragmentTransaction.replace(mListLayout.getId(), pollListFragment,
                     PollListFragment.class.getName());
             fragmentTransaction.commit();
+            pollDetailsFragment = null;
+            MenuItem item = mMenu.findItem(R.id.action_delete_responses);
+            item.setVisible(false);
         }
         else{
             super.onBackPressed();
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        if (mDbHelper != null){
+            mDbHelper.close();
+        }
+
+        super.onDestroy();
     }
 }

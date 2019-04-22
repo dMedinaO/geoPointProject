@@ -28,6 +28,8 @@
     <string name="label_button_clean_response">Borrar todo</string>
     <string name="label_button_save_response">Guardar</string>
 
+    <string name="label_button_exit_poll_completed">Salir</string>
+
     <string name="help_question_point">Doble click sobre el mapa para agregar un punto. Presione sobre un punto para eliminarlo.</string>
     <string name="help_question_polygon">Doble click sobre el mapa para agregar un punto.</string>
     <string name="help_question_route">Presione el botón a continuación y luego dibuje la ruta. Para terminar vuelva a presionar el botón.</string>
@@ -62,9 +64,12 @@
     <string name="label_button_enable_gps">Habilitar GPS</string>
 
 
+    <string name="text_poll_complete_title">Encuesta completa</string>
+    <string name="text_poll_complete">Ahora podra abandonar la encuesta de forma segura.</string>
     <string name="text_poll_incomplete_title">Encuesta incompleta</string>
     <string name="text_poll_incomplete">¿Esta seguro que desea abandonar esta encuesta? Se perdera el progreso.</string>
     <string name="text_poll_leave_poll">Abandonar</string>
+
     <string name="label_button_cancel">Cancelar</string>
     <string name="label_button_delete">Eliminar</string>
     <string name="label_button_recover">Recuperar</string>
@@ -98,9 +103,10 @@
     <string name="text_leave_poll_editor_more">Se perderan los cambios realizados.</string>
 
 
-    <string name="text_save_poll">Se guardara la encuesta actual como una nueva encuesta.</string>
-    <string name="text_save_poll_as_new_more">Se guardara la encuesta actual como una nueva encuesta.</string>
+    <string name="text_save_poll_title">Registrando encuesta.</string>
+    <string name="text_save_poll_as_new">Se guardara la encuesta actual como una nueva encuesta.</string>
     <string name="text_save_poll_update">La encuesta no ha sido respondida. Se actualizará la encuesta existente.</string>
+    <string name="text_save_poll_has_answers">La encuesta ha sido respondida. Se guardara como una nueva encuesta.</string>
 
     <string name="label_type_question_choice">Selección múltiple</string>
     <string name="label_type_question_text">Solicitar texto</string>
